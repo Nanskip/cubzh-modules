@@ -37,11 +37,15 @@ function perlin.grad(hash, x, y)
 	return ((h & 1) == 0 and u or -u) + ((h & 2) == 0 and v or -v)
 end
 
--- Permutation table (you can use any permutation here)
-perlin.permutation = {}
-for i = 0, 255 do
-	perlin.permutation[i] = math.random(0, 255)
+perlin.randomPermutation = function()
+    -- Permutation table (you can use any permutation here)
+    perlin.permutation = {}
+    for i = 0, 255 do
+        perlin.permutation[i] = math.random(0, 255)
+    end
 end
+perlin.randomPermutation()
+
 -- Helper functions
 function perlin.fade(t)
 	return t * t * t * (t * (t * 6 - 15) + 10)
