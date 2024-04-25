@@ -83,6 +83,10 @@ end
 
 -- Seed the permutation table with a random seed
 perlin.seed(os.time())
+perlin.randomPermutation = function()
+	perlin("⚠️ perlin.randomPermutation() is deprecated, use perlin.seed() instead.")
+	perlin.seed(os.time())
+end
 
 -- Helper functions
 function perlin.fade(t)
