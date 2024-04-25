@@ -18,7 +18,7 @@ end
 -- Seed the permutation table
  function perlin.seed(seed)
     math.randomseed(seed)
-    shuffle(perlin.permutation)
+    perlin.shuffle(perlin.permutation)
     -- Duplicate the permutation table to handle index wrapping
     for i = 0, 255 do
         perlin.permutation[256 + i] = perlin.permutation[i]
