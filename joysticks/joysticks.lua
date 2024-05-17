@@ -36,7 +36,7 @@ joysticks.create = function(config)
         if joystick ~= nil then
             joystick.shape = ui:createShape(item)
             joystick.shape.shape.Palette[1].Color = joystick.config.borderColor
-            joystick.shape.shape.Palette[1].Color = joystick.config.color
+            joystick.shape.shape.Palette[2].Color = joystick.config.color
 
             joystick.shape.Width = 160*joystick.config.scale
             joystick.shape.Height = 160*joystick.config.scale
@@ -49,7 +49,7 @@ joysticks.create = function(config)
         if joystick ~= nil then
             joystick.stick = ui:createShape(item)
             joystick.stick.shape.Palette[1].Color = joystick.config.borderColor
-            joystick.stick.shape.Palette[1].Color = joystick.config.color
+            joystick.stick.shape.Palette[2].Color = joystick.config.color
 
             joystick.stick.Width = 64*joystick.config.scale
             joystick.stick.Height = 64*joystick.config.scale
