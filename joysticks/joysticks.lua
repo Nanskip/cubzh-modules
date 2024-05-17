@@ -12,7 +12,8 @@ joysticks = {}
 joysticks.create = function(config)
     local defaultConfig = {
         pos = {0, 0},
-        color = Color(255, 255, 255),
+        color = Color(255, 255, 255, 127),
+        borderColor = Color(255, 255, 255),
         scale = 1
     }
 
@@ -34,6 +35,8 @@ joysticks.create = function(config)
     Object:Load("nanskip.joystick", function(item)
         if joystick ~= nil then
             joystick.shape = ui:createShape(item)
+            joystick.shape.shape.Palette[1].Color = joystick.config.borderColor
+            joystick.shape.shape.Palette[1].Color = joystick.config.color
 
             joystick.shape.Width = 160*joystick.config.scale
             joystick.shape.Height = 160*joystick.config.scale
@@ -45,6 +48,8 @@ joysticks.create = function(config)
     Object:Load("nanskip.joystick_stick", function(item)
         if joystick ~= nil then
             joystick.stick = ui:createShape(item)
+            joystick.stick.shape.Palette[1].Color = joystick.config.borderColor
+            joystick.stick.shape.Palette[1].Color = joystick.config.color
 
             joystick.stick.Width = 64*joystick.config.scale
             joystick.stick.Height = 64*joystick.config.scale
