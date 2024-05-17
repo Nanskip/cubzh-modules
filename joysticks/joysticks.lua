@@ -16,6 +16,8 @@ joysticks.create = function(config)
         scale = 1
     }
 
+    local ui = require("uikit")
+
     if config == nil then
         config = {}
     end
