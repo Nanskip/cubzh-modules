@@ -72,7 +72,7 @@ joysticks.create = function(config)
 
     joystick.getValues = function(self)
         if self == nil then
-            error("joystick.GetValues() must be called with ':'!", 3)
+            error("joystick.getValues() must be called with ':'!", 3)
 
             return
         end
