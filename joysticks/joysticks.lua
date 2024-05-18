@@ -77,6 +77,9 @@ joysticks.create = function(config)
             return
         end
 
+        if self.x == nil then self.x = 0 end
+        if self.y == nil then self.y = 0 end
+        
         return Number2(self.x, self.y)
     end
 
