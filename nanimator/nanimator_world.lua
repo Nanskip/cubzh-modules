@@ -90,7 +90,7 @@ createUI = function()
     buttons.loadModel = ui:createButton("Load Model")
     buttons.loadModel.size = Number2(buttons.loadModel.size.X, buttons.loadModel.size.Y + 8)
     buttons.loadModel.pos = Number2(Screen.Width - buttons.loadModel.size.X - 8 - Screen.SafeArea.Right, Screen.Height - buttons.loadModel.size.Y - 8 - Screen.SafeArea.Top)
-    --stolen from S&Cubzh 2 by fab3kleuuu
+    -- stolen from S&Cubzh 2 by fab3kleuuu
     buttons.loadModel.onPress = function()
         local function maxModalWidth()
             local computed = Screen.Width - Screen.SafeArea.Left - Screen.SafeArea.Right - 50
@@ -126,23 +126,61 @@ createUI = function()
             items_gallery:close()
         end
     end
+    -- end of stolen part :3
 
     timeline = Object()
+
+    timeline.selectedTime = 0
+    timeline.maxTime = 0
+    timeline.stepSize = 10
+
     timeline.background = ui:createFrame(Color(0, 0, 0, 0.5))
     timeline.background.size = Number2(Screen.Width - 40 - 200, 210)
     timeline.background.pos = Number2(10, 10)
     timeline.background.onPress = function() return end
 
+    timeline.background.onDrag = function(self, pe)
+        local x = math.floor(pe.X * Screen.Width)
+        local y = math.floor(pe.Y * Screen.Width)
+
+        timeline.selectedTime = math.min(math.max(0, (x)-270), timeline.background.Width-295) // timeline.stepSize * timeline.stepSize
+        timeline.cursorLine.pos.X = timeline.selectedTime + 270
+        timeline.cursor.pos.X = timeline.selectedTime + 267
+        timeline.time.Text = "Time: " .. string.format("%.0f", timeline.selectedTime/timeline.stepSize) .. "/" .. timeline.maxTime
+    end
+
     timeline.background2 = ui:createFrame(Color(0, 0, 0, 0.3))
     timeline.background2.size = Number2(255, 210)
     timeline.background2.pos = Number2(10, 10)
+    timeline.background2.onPress = function() return end
 
-    timeline.backgroundVertLine = ui:createFrame(Color(0, 0, 0, 0.2))
-    timeline.backgroundVertLine.size = Number2(5, timeline.background.size.Y)
-    timeline.backgroundVertLine.pos = Number2(265, 10)
+    timeline.background3 = ui:createFrame(Color(0.2, 0.2, 0.2, 0.5))
+    timeline.background3.size = Number2(220, 210)
+    timeline.background3.pos = Number2(10+timeline.background.Width, 10)
+    timeline.background3.onPress = function() return end
+
+    timeline.backgroundVertLine1 = ui:createFrame(Color(0, 0, 0, 0.2))
+    timeline.backgroundVertLine1.size = Number2(5, timeline.background.size.Y)
+    timeline.backgroundVertLine1.pos = Number2(265, 10)
     timeline.backgroundVertLine2 = ui:createFrame(Color(0, 0, 0, 0.2))
     timeline.backgroundVertLine2.size = Number2(5, timeline.background.size.Y)
     timeline.backgroundVertLine2.pos = Number2(10, 10)
+    timeline.backgroundVertLine3 = ui:createFrame(Color(0, 0, 0, 0.2))
+    timeline.backgroundVertLine3.size = Number2(5, timeline.background.size.Y)
+    timeline.backgroundVertLine3.pos = Number2(5+timeline.background.Width +timeline.background3.Width, 10)
+    timeline.backgroundVertLine4 = ui:createFrame(Color(0, 0, 0, 0.2))
+    timeline.backgroundVertLine4.size = Number2(5, timeline.background.size.Y)
+    timeline.backgroundVertLine4.pos = Number2(10+timeline.background.Width, 10)
+
+    timeline.backgroundHoriLine1 = ui:createFrame(Color(0, 0, 0, 0.2))
+    timeline.backgroundHoriLine1.size = Number2(210, 5)
+    timeline.backgroundHoriLine1.pos = Number2(15+timeline.background.Width, 10)
+    timeline.backgroundHoriLine2 = ui:createFrame(Color(0, 0, 0, 0.2))
+    timeline.backgroundHoriLine2.size = Number2(210, 5)
+    timeline.backgroundHoriLine2.pos = Number2(15+timeline.background.Width, timeline.background.size.Y+5)
+
+    timeline.time = ui:createText("Time: " .. timeline.selectedTime .. "/" .. timeline.maxTime, Color(255, 255, 255))
+    timeline.time.pos = Number2(Screen.Width - 200-20, 230-38-3)
 
     timeline.shapes = {}
     timeline.buttons = {}
@@ -163,6 +201,37 @@ createUI = function()
             scrollNumber = scrollNumber + 1
         end
         timeline.update()
+    end
+
+    timeline.rotateButton = ui:createButton("↻")
+    timeline.rotateButton.pos = Number2(Screen.Width - 220, 20)
+    timeline.rotateButton.onRelease = function()
+        gizmo:setMode(aGizmo.Mode.Rotate)
+    end
+
+    timeline.moveButton = ui:createButton("⇢")
+    timeline.moveButton.pos = Number2(Screen.Width - 220 + 36, 20)
+    timeline.moveButton.onRelease = function()
+        gizmo:setMode(aGizmo.Mode.Move)
+    end
+
+    timeline.localButton = ui:createButton("🏠")
+    timeline.localButton.pos = Number2(Screen.Width - 220 + 36*2 + 5, 20)
+    timeline.localButton.onRelease = function()
+        gizmo:setOrientation(aGizmo.Orientation.Local)
+    end
+
+    timeline.globalButton = ui:createButton("🌎")
+    timeline.globalButton.pos = Number2(Screen.Width - 220 + 36*3 + 5, 20)
+    timeline.globalButton.onRelease = function()
+        gizmo:setOrientation(aGizmo.Orientation.World)
+    end
+
+    timeline.resetButton = ui:createButton("🔁")
+    timeline.resetButton.pos = Number2(Screen.Width - 20-36, 20)
+    timeline.resetButton.onRelease = function()
+        selectedObject.LocalRotation = selectedObject.defaultRotation
+        selectedObject.LocalPosition = selectedObject.defaultPosition
     end
 
     timeline.buttonsBackground = ui:createFrame(Color(0, 0, 0, 0.4))
@@ -208,6 +277,14 @@ createUI = function()
         end
     end
 
+    timeline.cursor = ui:createFrame(Color(255, 255, 0))
+    timeline.cursor.size = Number2(11, 12)
+    timeline.cursor.pos = Number2(265, 215)
+
+    timeline.cursorLine = ui:createFrame(Color(255, 255, 255, 0.6))
+    timeline.cursorLine.size = Number2(5, 200)
+    timeline.cursorLine.pos = Number2(268, 15)
+
     animationSelector = Object()
     animationSelector = ui:createFrame(Color(0, 0, 0, 0.5))
     animationSelector.size = Number2(260, 320)
@@ -249,6 +326,9 @@ loadModel = function(model)
         if parent.depth == nil then parent.depth = -1 end
         s.depth = parent.depth + 1
         s.Physics = PhysicsMode.StaticPerBlock
+
+        s.defaultPosition = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z)
+        s.defaultRotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
     end)
 
     for k, v in ipairs(timeline.shapes) do
