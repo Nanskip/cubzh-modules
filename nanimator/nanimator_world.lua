@@ -15,10 +15,16 @@ Client.OnStart = function()
     Camera.FOV = 60
     globalDx = 0 globalDy = 0
     scrollNumber = 1
+    playing = false
+    playSpeed = 12
     --Player:SetParent(nil)
+
+    startPos = Number3(Map.Width*Map.Scale.X/2, Map.Height*Map.Scale.Y/1.2, Map.Depth*Map.Scale.Z/2)
+    Camera.Position = startPos
 
     createUI()
     createLocalEvents()
+    createLerps()
     aGizmo:setLayer(2)
     gizmo = aGizmo:create({
 		orientation = 1,
@@ -28,16 +34,47 @@ Client.OnStart = function()
     gizmo:setOnRotateEnd(function()
         gizmo:setObject(nil)
         gizmo:setObject(selectedObject)
+
+        gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize)
+    end)
+    gizmo:setOnMoveEnd(function()
+        gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize)
     end)
     Camera.Layers = {1, 2}
 end
 
-Client.Tick = function()
+Client.Tick = function(dt)
     Camera.Rotation.Z = 0
 
     Camera.Position = Camera.Position + Camera.Forward*globalDy + Camera.Right*globalDx
     if shiftPressed then Camera.Position = Camera.Position + Number3(0, -1, 0) end
     if spacePressed then Camera.Position = Camera.Position + Number3(0, 1, 0) end
+
+    timeline.updated = false
+
+    if playing then
+        local delta = dt*62.5
+        local frame = (delta*playSpeed)/62.5
+        timeline.indexTime = timeline.indexTime + frame
+
+        timeline.updateObjects()
+        timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
+        timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
+
+        timeline.updateTime()
+        if timeline.cursorLine.pos.X > timeline.background.Width-70 then
+            timeline.frameOffset = timeline.frameOffset + timeline.stepSize*10
+            timeline.update()
+        end
+        if timeline.indexTime > timeline.maxTime then
+            timeline.indexTime = timeline.savedindexTime
+            timeline.updateObjects()
+            playing = false
+            timeline.playButton.Text = "▶️"
+            timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
+            timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
+        end
+    end
 end
 
 Pointer.Down = function( pointerEvent )
@@ -132,21 +169,34 @@ createUI = function()
 
     timeline.selectedTime = 0
     timeline.maxTime = 0
-    timeline.stepSize = 10
+    timeline.indexTime = 0
+    timeline.stepSize = 20
+    timeline.frameOffset = 0
+    timeline.animations = {}
+    timeline.keyframes = {}
 
     timeline.background = ui:createFrame(Color(0, 0, 0, 0.5))
     timeline.background.size = Number2(Screen.Width - 40 - 200, 210)
     timeline.background.pos = Number2(10, 10)
     timeline.background.onPress = function() return end
 
+    timeline.updateTime = function()
+        timeline.time.Text = "Time: " .. string.format("%.0f", timeline.indexTime) .. "/" .. timeline.maxTime
+    end
+
     timeline.background.onDrag = function(self, pe)
         local x = math.floor(pe.X * Screen.Width)
         local y = math.floor(pe.Y * Screen.Width)
 
         timeline.selectedTime = math.min(math.max(0, (x)-270), timeline.background.Width-295) // timeline.stepSize * timeline.stepSize
+        timeline.indexTime = timeline.selectedTime // timeline.stepSize
         timeline.cursorLine.pos.X = timeline.selectedTime + 270
         timeline.cursor.pos.X = timeline.selectedTime + 267
-        timeline.time.Text = "Time: " .. string.format("%.0f", timeline.selectedTime/timeline.stepSize) .. "/" .. timeline.maxTime
+        if not timeline.updated then
+            timeline.updateObjects()
+            timeline.updateTime()
+        end
+        timeline.updated = true
     end
 
     timeline.background2 = ui:createFrame(Color(0, 0, 0, 0.3))
@@ -185,7 +235,7 @@ createUI = function()
     timeline.shapes = {}
     timeline.buttons = {}
 
-    timeline.upButton = ui:createButton("⬆")
+    timeline.upButton = ui:createButton("⬆", {borders = false, shadow = false})
     timeline.upButton.pos = Number2(Screen.Width - 200-30-36, 10+210-36)
     timeline.upButton.onRelease = function()
         if scrollNumber > 1 then
@@ -194,7 +244,7 @@ createUI = function()
         timeline.update()
     end
 
-    timeline.downButton = ui:createButton("⬇")
+    timeline.downButton = ui:createButton("⬇", {borders = false, shadow = false})
     timeline.downButton.pos = Number2(Screen.Width - 200-30-36, 10)
     timeline.downButton.onRelease = function()
         if scrollNumber < #timeline.shapes-4 then
@@ -203,40 +253,102 @@ createUI = function()
         timeline.update()
     end
 
-    timeline.rotateButton = ui:createButton("↻")
+    timeline.rotateButton = ui:createButton("↻", {borders = false, shadow = false})
     timeline.rotateButton.pos = Number2(Screen.Width - 220, 20)
     timeline.rotateButton.onRelease = function()
         gizmo:setMode(aGizmo.Mode.Rotate)
     end
 
-    timeline.moveButton = ui:createButton("⇢")
+    timeline.moveButton = ui:createButton("⇢", {borders = false, shadow = false})
     timeline.moveButton.pos = Number2(Screen.Width - 220 + 36, 20)
     timeline.moveButton.onRelease = function()
         gizmo:setMode(aGizmo.Mode.Move)
     end
 
-    timeline.localButton = ui:createButton("🏠")
+    timeline.localButton = ui:createButton("🏠", {borders = false, shadow = false})
     timeline.localButton.pos = Number2(Screen.Width - 220 + 36*2 + 5, 20)
     timeline.localButton.onRelease = function()
         gizmo:setOrientation(aGizmo.Orientation.Local)
     end
 
-    timeline.globalButton = ui:createButton("🌎")
+    timeline.globalButton = ui:createButton("🌎", {borders = false, shadow = false})
     timeline.globalButton.pos = Number2(Screen.Width - 220 + 36*3 + 5, 20)
     timeline.globalButton.onRelease = function()
         gizmo:setOrientation(aGizmo.Orientation.World)
     end
 
-    timeline.resetButton = ui:createButton("🔁")
+    timeline.resetButton = ui:createButton("🔁", {borders = false, shadow = false})
     timeline.resetButton.pos = Number2(Screen.Width - 20-36, 20)
     timeline.resetButton.onRelease = function()
         selectedObject.LocalRotation = selectedObject.defaultRotation
         selectedObject.LocalPosition = selectedObject.defaultPosition
     end
 
+    timeline.addKeyframeButton = ui:createButton("➕", {borders = false, shadow = false})
+    timeline.addKeyframeButton.pos = Number2(Screen.Width - 200-30-36, 10+210)
+    timeline.addKeyframeButton.onRelease = function()
+        if gizmo:getObject() ~= nil then
+            gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize)
+        end
+    end
+
+    timeline.removeKeyframeButton = ui:createButton("➖", {borders = false, shadow = false})
+    timeline.removeKeyframeButton.pos = Number2(Screen.Width - 200-30-36*2, 10+210)
+    timeline.removeKeyframeButton.onRelease = function()
+        if gizmo:getObject() ~= nil then
+            gizmo:getObject():removeKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize)
+        end
+    end
+
+    timeline.leftFrameButton = ui:createButton("⬆", {borders = false, shadow = false})
+    timeline.leftFrameButton.pos = Number2(Screen.Width - 200-30-36*3, 10+210)
+    timeline.leftFrameButton.Rotation.Z = math.pi/2
+    timeline.leftFrameButton.onRelease = function()
+        timeline.frameOffset = timeline.frameOffset - timeline.stepSize*10
+        timeline.update()
+    end
+
+    timeline.rightFrameButton = ui:createButton("⬇", {borders = false, shadow = false})
+    timeline.rightFrameButton.pos = Number2(Screen.Width - 200-30-36*2, 10+210)
+    timeline.rightFrameButton.Rotation.Z = math.pi/2
+    timeline.rightFrameButton.onRelease = function()
+        timeline.frameOffset = timeline.frameOffset + timeline.stepSize*10
+        timeline.update()
+    end
+
+    timeline.playButton = ui:createButton("▶️", {borders = false, shadow = false})
+    timeline.playButton.pos = Number2(Screen.Width - 220, 20+38+5)
+    timeline.playButton.onRelease = function()
+        if not playing then
+            timeline.savedindexTime = timeline.indexTime
+            playing = true
+            timeline.playButton.Text = "⏹️"
+        else
+            timeline.indexTime = timeline.savedindexTime
+            timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
+            timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
+            playing = false
+            timeline.updateObjects()
+            timeline.playButton.Text = "▶️"
+        end
+    end
+
+    timeline.speedEdit = ui:createTextInput(tostring(playSpeed), "Speed")
+    timeline.speedEdit.pos = Number2(Screen.Width - 220 + 38 + 5, 20+38+5)
+    timeline.speedEdit.Width = 156/2
+    timeline.speedEdit.onTextChange = function()
+        playSpeed = tonumber(timeline.speedEdit.Text) or 1
+        if playSpeed < 1 then
+            playSpeed = 1
+        end
+        if playSpeed > 6000 then
+            playSpeed = 6000
+        end
+    end
+
     timeline.buttonsBackground = ui:createFrame(Color(0, 0, 0, 0.4))
-    timeline.buttonsBackground.size = Number2(36, 210-(36*2))
-    timeline.buttonsBackground.pos = Number2(Screen.Width - 200-30-36, 46)
+    timeline.buttonsBackground.size = Number2(38, 210-(37*2))
+    timeline.buttonsBackground.pos = Number2(Screen.Width - 200-30-36, 48)
 
     timeline.horizontalLines = {}
 
@@ -247,6 +359,9 @@ createUI = function()
     end
 
     timeline.update = function()
+        if timeline.frameOffset < 0 then
+            timeline.frameOffset = 0
+        end
         for k, v in ipairs(timeline.buttons) do
             timeline.buttons[k].pos = Number2(-1000, -1000)
             timeline.buttons[k].line.pos = Number2(-1000, -1000)
@@ -256,11 +371,17 @@ createUI = function()
             end
         end
 
+        for k, v in pairs(timeline.keyframes) do
+            for key, value in pairs(timeline.keyframes[k]) do
+                timeline.keyframes[k][key]:remove()
+                timeline.keyframes[k][key] = nil
+            end
+        end
+
         for i = scrollNumber, scrollNumber + 4 do
             if timeline.shapes[i] == nil then break end
 
             local v = timeline.shapes[i]
-
             timeline.buttons[i].pos = Number2(15, 179 - ((36 + 5))*(i-scrollNumber))
             timeline.buttons[i].Width = 250
 
@@ -274,7 +395,77 @@ createUI = function()
                 timeline.buttons[i].line3.size = Number2(5, 17)
                 timeline.buttons[i].line3.pos = Number2(timeline.buttons[i].pos.X - 10, timeline.buttons[i].pos.Y)
             end
+
+            for k, v in pairs(timeline.animations[selectedAnimation].shapes[v.name].frames) do
+                if timeline.keyframes[v] == nil then timeline.keyframes[v] = {} end
+                timeline.keyframes[v][k] = ui:createFrame(Color(0, 255, 255))
+                timeline.keyframes[v][k].size = Number2(14, 14.5)
+                timeline.keyframes[v][k].pos = Number2(273 + (k)*timeline.stepSize-timeline.frameOffset, timeline.buttons[i].pos.Y + 8)
+                timeline.keyframes[v][k].Rotation.Z = math.pi/4
+                if timeline.keyframes[v][k].pos.X < 273 or timeline.keyframes[v][k].pos.X > Screen.Width-266 then
+                    timeline.keyframes[v][k]:remove()
+                    timeline.keyframes[v][k] = nil
+                end
+            end
         end
+    end
+
+    timeline.updateObjects = function()
+        hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
+            local left_keyframe = 0
+            local right_keyframe = 0
+
+            local keyframes = {}
+            for _, text in pairs(timeline.animations[selectedAnimation].shapes[s.name].frames) do
+                table.insert(keyframes, tonumber(_))
+                if tonumber(_) > right_keyframe then
+                    right_keyframe = tonumber(_)
+                end
+            end
+            local invertedKeyframes = {}
+            for i=#keyframes, 1, -1 do
+                invertedKeyframes[i] = keyframes[i]
+            end
+
+            if #keyframes < 2 then
+                return
+            end
+
+            if timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(timeline.indexTime)] ~= nil then
+                left_keyframe = timeline.indexTime
+                right_keyframe = timeline.indexTime
+            else
+                for _, keyframe in ipairs(keyframes) do
+                    if keyframe < timeline.indexTime and keyframe > left_keyframe then
+                        left_keyframe = keyframe
+                    end
+                end
+    
+                for _, keyframe in ipairs(invertedKeyframes) do
+                    if keyframe > timeline.indexTime and keyframe < right_keyframe  then
+                        right_keyframe = keyframe
+                    end
+                end
+            end
+
+            local time = 0
+            if left_keyframe ~= nil and right_keyframe ~= nil and right_keyframe ~= left_keyframe then
+                time = (timeline.indexTime - left_keyframe) / (right_keyframe - left_keyframe)
+            end
+
+            if timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].rotation ~= nil and timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].rotation ~= nil then
+                s.LocalRotation:Slerp(
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].rotation,
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].rotation,
+                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].interpolation](time)
+                )
+                s.LocalPosition:Lerp(
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].position,
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].position,
+                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].interpolation](time)
+                )
+            end
+        end)
     end
 
     timeline.cursor = ui:createFrame(Color(255, 255, 0))
@@ -304,6 +495,13 @@ loadModel = function(model)
         timeline.shapes[k] = nil
     end
 
+    for k, v in pairs(timeline.keyframes) do
+        for key, value in pairs(timeline.keyframes[k]) do
+            timeline.keyframes[k][key]:remove()
+            timeline.keyframes[k][key] = nil
+        end
+    end
+
     for k, v in ipairs(timeline.buttons) do
         timeline.buttons[k].line:remove()
         timeline.buttons[k].line = nil
@@ -319,6 +517,19 @@ loadModel = function(model)
         timeline.buttons[k] = nil
     end
 
+    for k, v in ipairs(timeline.animations) do
+        timeline.animations[k]:remove()
+        timeline.animations[k] = nil
+    end
+
+    selectedAnimation = "default"
+
+    timeline.animations["default"] = {
+        shapes = {}
+    }
+
+    model.Position = startPos
+
     hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
         table.insert(timeline.shapes, s)
         
@@ -329,12 +540,40 @@ loadModel = function(model)
 
         s.defaultPosition = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z)
         s.defaultRotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
+
+        s.addKeyframe = function(self, time)
+            if timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] == nil then
+                timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] = {
+                    position = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z),
+                    rotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z),
+                    interpolation = "linear"
+                }
+                checkforKeyframe(time)
+            else
+                self:removeKeyframe(time)
+                timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] = {
+                    position = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z),
+                    rotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z),
+                    interpolation = "linear"
+                }
+                checkforKeyframe(time)
+            end
+
+            timeline.update()
+        end
+
+        s.removeKeyframe = function(self, time)
+            timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] = nil
+
+            timeline.update()
+        end
     end)
 
     for k, v in ipairs(timeline.shapes) do
         local name = v.Name
-        if name == nil or name == "(null)" then name = "Shape " .. math.random(1000, 9999) end
-        timeline.buttons[k] = ui:createButton(name, {borders = false, color = Color(0.2, 0.2, 0.2, 0.3), colorPressed = Color(0.3, 0.3, 0.3, 0.3), shadow = false})
+        if name == nil or name == "(null)" then name = "shape_" .. math.random(1000, 9999) end
+        v.name = name .. #timeline.buttons
+        timeline.buttons[k] = ui:createButton(name .. " [#" .. #timeline.buttons .. "]", {borders = false, color = Color(0.2, 0.2, 0.2, 0.3), colorPressed = Color(0.3, 0.3, 0.3, 0.3), shadow = false})
         timeline.buttons[k].pos = Number2(15, 15 + ((timeline.buttons[k].Height + 5))*(k-1))
 
         if v.depth == nil then v.depth = 0 end
@@ -364,11 +603,33 @@ loadModel = function(model)
         end
         
         timeline.buttons[k].onRelease = function()
-
             selectedObject = v
             gizmo:setObject(v)
-        end 
+        end
+
+        timeline.animations[selectedAnimation].shapes[v.name] = {name = v.name}
+        timeline.animations[selectedAnimation].shapes[v.name].frames = {}
     end
 
     timeline.update()
+end
+
+createLerps = function()
+    lerp = {}
+
+    lerp.linear = function(t) return t end
+    lerp.quadraticIn = function(t) return t*t end
+    lerp.cubicIn = function(t) return t*t*t end
+    lerp.quadraticOut = function(t) return t*(2-t) end
+    lerp.cubicOut = function(t) return t*(2-t)*(2-t) end
+
+    lerp.interpolate = function(a, b, t, type)
+        t = lerp[type](t)
+
+        return a*(1-t) + b*t
+    end
+end
+
+checkforKeyframe = function(time)
+    if timeline.maxTime < time then timeline.maxTime = time end
 end
