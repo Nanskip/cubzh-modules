@@ -17,10 +17,11 @@ Client.OnStart = function()
     scrollNumber = 1
     playing = false
     playSpeed = 12
+    selectedInterp = "linear"
     --Player:SetParent(nil)
 
     startPos = Number3(Map.Width*Map.Scale.X/2, Map.Height*Map.Scale.Y/1.2, Map.Depth*Map.Scale.Z/2)
-    Camera.Position = startPos
+    Map.Position = Map.Position - startPos
 
     createUI()
     createLocalEvents()
@@ -35,10 +36,10 @@ Client.OnStart = function()
         gizmo:setObject(nil)
         gizmo:setObject(selectedObject)
 
-        gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize)
+        gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize, selectedInterp)
     end)
     gizmo:setOnMoveEnd(function()
-        gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize)
+        gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize, selectedInterp)
     end)
     Camera.Layers = {1, 2}
 end
@@ -68,7 +69,9 @@ Client.Tick = function(dt)
         end
         if timeline.indexTime > timeline.maxTime then
             timeline.indexTime = timeline.savedindexTime
+            timeline.offsetTime = timeline.savedoffsetTime 
             timeline.updateObjects()
+            timeline.update()
             playing = false
             timeline.playButton.Text = "▶️"
             timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
@@ -181,6 +184,7 @@ createUI = function()
     timeline.background.onPress = function() return end
 
     timeline.updateTime = function()
+        timeline.maxTime = timeline.animations[selectedAnimation].maxTime
         timeline.time.Text = "Time: " .. string.format("%.0f", timeline.indexTime) .. "/" .. timeline.maxTime
     end
 
@@ -189,7 +193,7 @@ createUI = function()
         local y = math.floor(pe.Y * Screen.Width)
 
         timeline.selectedTime = math.min(math.max(0, (x)-270), timeline.background.Width-295) // timeline.stepSize * timeline.stepSize
-        timeline.indexTime = timeline.selectedTime // timeline.stepSize
+        timeline.indexTime = (timeline.selectedTime+timeline.frameOffset) // timeline.stepSize
         timeline.cursorLine.pos.X = timeline.selectedTime + 270
         timeline.cursor.pos.X = timeline.selectedTime + 267
         if not timeline.updated then
@@ -235,8 +239,8 @@ createUI = function()
     timeline.shapes = {}
     timeline.buttons = {}
 
-    timeline.upButton = ui:createButton("⬆", {borders = false, shadow = false})
-    timeline.upButton.pos = Number2(Screen.Width - 200-30-36, 10+210-36)
+    timeline.upButton = ui:createButton("⬆", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.upButton.pos = Number2(Screen.Width - 200-30-38, 10+210-38)
     timeline.upButton.onRelease = function()
         if scrollNumber > 1 then
             scrollNumber = scrollNumber - 1
@@ -244,8 +248,8 @@ createUI = function()
         timeline.update()
     end
 
-    timeline.downButton = ui:createButton("⬇", {borders = false, shadow = false})
-    timeline.downButton.pos = Number2(Screen.Width - 200-30-36, 10)
+    timeline.downButton = ui:createButton("⬇", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.downButton.pos = Number2(Screen.Width - 200-30-38, 10)
     timeline.downButton.onRelease = function()
         if scrollNumber < #timeline.shapes-4 then
             scrollNumber = scrollNumber + 1
@@ -253,78 +257,84 @@ createUI = function()
         timeline.update()
     end
 
-    timeline.rotateButton = ui:createButton("↻", {borders = false, shadow = false})
+    timeline.rotateButton = ui:createButton("↻", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
     timeline.rotateButton.pos = Number2(Screen.Width - 220, 20)
     timeline.rotateButton.onRelease = function()
         gizmo:setMode(aGizmo.Mode.Rotate)
     end
 
-    timeline.moveButton = ui:createButton("⇢", {borders = false, shadow = false})
-    timeline.moveButton.pos = Number2(Screen.Width - 220 + 36, 20)
+    timeline.moveButton = ui:createButton("⇢", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.moveButton.pos = Number2(Screen.Width - 220 + 38, 20)
     timeline.moveButton.onRelease = function()
         gizmo:setMode(aGizmo.Mode.Move)
     end
 
-    timeline.localButton = ui:createButton("🏠", {borders = false, shadow = false})
-    timeline.localButton.pos = Number2(Screen.Width - 220 + 36*2 + 5, 20)
+    timeline.localButton = ui:createButton("🏠", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.localButton.pos = Number2(Screen.Width - 220 + 38*2 + 5, 20)
     timeline.localButton.onRelease = function()
         gizmo:setOrientation(aGizmo.Orientation.Local)
     end
 
-    timeline.globalButton = ui:createButton("🌎", {borders = false, shadow = false})
-    timeline.globalButton.pos = Number2(Screen.Width - 220 + 36*3 + 5, 20)
+    timeline.globalButton = ui:createButton("🌎", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.globalButton.pos = Number2(Screen.Width - 220 + 38*3 + 5, 20)
     timeline.globalButton.onRelease = function()
         gizmo:setOrientation(aGizmo.Orientation.World)
     end
 
-    timeline.resetButton = ui:createButton("🔁", {borders = false, shadow = false})
-    timeline.resetButton.pos = Number2(Screen.Width - 20-36, 20)
+    timeline.resetButton = ui:createButton("🔁", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.resetButton.pos = Number2(Screen.Width - 20-38, 20)
     timeline.resetButton.onRelease = function()
         selectedObject.LocalRotation = selectedObject.defaultRotation
         selectedObject.LocalPosition = selectedObject.defaultPosition
     end
 
-    timeline.addKeyframeButton = ui:createButton("➕", {borders = false, shadow = false})
-    timeline.addKeyframeButton.pos = Number2(Screen.Width - 200-30-36, 10+210)
+    timeline.addKeyframeButton = ui:createButton("➕", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.addKeyframeButton.pos = Number2(Screen.Width - 200-30-38, 10+210)
     timeline.addKeyframeButton.onRelease = function()
         if gizmo:getObject() ~= nil then
-            gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize)
+            gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize, selectedInterp)
         end
     end
 
-    timeline.removeKeyframeButton = ui:createButton("➖", {borders = false, shadow = false})
-    timeline.removeKeyframeButton.pos = Number2(Screen.Width - 200-30-36*2, 10+210)
+    timeline.removeKeyframeButton = ui:createButton("➖", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.removeKeyframeButton.pos = Number2(Screen.Width - 200-30-38*2, 10+210)
     timeline.removeKeyframeButton.onRelease = function()
         if gizmo:getObject() ~= nil then
             gizmo:getObject():removeKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize)
         end
     end
 
-    timeline.leftFrameButton = ui:createButton("⬆", {borders = false, shadow = false})
-    timeline.leftFrameButton.pos = Number2(Screen.Width - 200-30-36*3, 10+210)
+    timeline.leftFrameButton = ui:createButton("⬆", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.leftFrameButton.pos = Number2(Screen.Width - 200-30-38*3, 10+210)
     timeline.leftFrameButton.Rotation.Z = math.pi/2
     timeline.leftFrameButton.onRelease = function()
         timeline.frameOffset = timeline.frameOffset - timeline.stepSize*10
         timeline.update()
+        timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
+        timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
     end
 
-    timeline.rightFrameButton = ui:createButton("⬇", {borders = false, shadow = false})
-    timeline.rightFrameButton.pos = Number2(Screen.Width - 200-30-36*2, 10+210)
+    timeline.rightFrameButton = ui:createButton("⬇", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.rightFrameButton.pos = Number2(Screen.Width - 200-30-38*2, 10+210)
     timeline.rightFrameButton.Rotation.Z = math.pi/2
     timeline.rightFrameButton.onRelease = function()
         timeline.frameOffset = timeline.frameOffset + timeline.stepSize*10
         timeline.update()
+        timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
+        timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
     end
 
-    timeline.playButton = ui:createButton("▶️", {borders = false, shadow = false})
+    timeline.playButton = ui:createButton("▶️", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
     timeline.playButton.pos = Number2(Screen.Width - 220, 20+38+5)
     timeline.playButton.onRelease = function()
         if not playing then
             timeline.savedindexTime = timeline.indexTime
+            timeline.savedoffsetTime = timeline.offsetTime
             playing = true
             timeline.playButton.Text = "⏹️"
         else
             timeline.indexTime = timeline.savedindexTime
+            timeline.offsetTime = timeline.savedoffsetTime 
             timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
             timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
             playing = false
@@ -347,15 +357,51 @@ createUI = function()
     end
 
     timeline.buttonsBackground = ui:createFrame(Color(0, 0, 0, 0.4))
-    timeline.buttonsBackground.size = Number2(38, 210-(37*2))
-    timeline.buttonsBackground.pos = Number2(Screen.Width - 200-30-36, 48)
+    timeline.buttonsBackground.size = Number2(38, 210-(38*2))
+    timeline.buttonsBackground.pos = Number2(Screen.Width - 200-30-38, 48)
 
     timeline.horizontalLines = {}
 
     for i=1, 6 do
         timeline.horizontalLines[i] = ui:createFrame(Color(0, 0, 0, 0.2))
-        timeline.horizontalLines[i].size = Number2(timeline.background.Width-36, 5)
+        timeline.horizontalLines[i].size = Number2(timeline.background.Width-38, 5)
         timeline.horizontalLines[i].pos = Number2(10, 10 + (41*(i-1)))
+    end
+
+    timeline.lerpTypes = {
+        "linear", "quadraticIn", "quadraticOut", "quadraticInOut",
+        "cubicIn", "cubicOut", "cubicInOut", "exponentialIn",
+        "exponentialOut", "exponentialInOut", "circleIn",
+        "circleOut", "circleInOut"
+    }
+    timeline.lerpButtons = {}
+
+    for i=1, #timeline.lerpTypes do
+        timeline.lerpButtons[i] = ui:createButton(timeline.lerpTypes[i], {borders = false, shadow = false})
+        timeline.lerpButtons[i].pos = Number2(-1000, -1000)
+        timeline.lerpButtons[i].Width = 200
+        timeline.lerpButtons[i].onRelease = function()
+            timeline.lerpChangeButton:enable()
+            selectedInterp = timeline.lerpTypes[i]
+            timeline.lerpText.Text = "Interpolation: \n" .. selectedInterp
+            for i=1, #timeline.lerpTypes do
+                timeline.lerpButtons[i].pos = Number2(-1000, -1000)
+            end
+        end
+    end
+
+    timeline.lerpText = ui:createText("Interpolation: \n" .. selectedInterp, Color(220, 220, 220))
+    timeline.lerpText.pos = Number2(Screen.Width - 200-20, 230-38-3-24*2)
+
+    timeline.lerpChangeButton = ui:createButton("Edit", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.lerpChangeButton.pos = Number2(Screen.Width - 220, 20+38+5+38+5)
+    timeline.lerpChangeButton.Height = 33
+    timeline.lerpChangeButton.onRelease = function()
+        for i=1, #timeline.lerpTypes do
+            timeline.lerpButtons[i].pos = Number2(Screen.Width - 220, 20+38+5+162+((i-1)*36))
+            timeline.lerpButtons[i].Width = 200
+        end
+        timeline.lerpChangeButton:disable()
     end
 
     timeline.update = function()
@@ -396,21 +442,50 @@ createUI = function()
                 timeline.buttons[i].line3.pos = Number2(timeline.buttons[i].pos.X - 10, timeline.buttons[i].pos.Y)
             end
 
-            for k, v in pairs(timeline.animations[selectedAnimation].shapes[v.name].frames) do
-                if timeline.keyframes[v] == nil then timeline.keyframes[v] = {} end
-                timeline.keyframes[v][k] = ui:createFrame(Color(0, 255, 255))
-                timeline.keyframes[v][k].size = Number2(14, 14.5)
-                timeline.keyframes[v][k].pos = Number2(273 + (k)*timeline.stepSize-timeline.frameOffset, timeline.buttons[i].pos.Y + 8)
-                timeline.keyframes[v][k].Rotation.Z = math.pi/4
-                if timeline.keyframes[v][k].pos.X < 273 or timeline.keyframes[v][k].pos.X > Screen.Width-266 then
-                    timeline.keyframes[v][k]:remove()
-                    timeline.keyframes[v][k] = nil
+            for k, val in pairs(timeline.animations[selectedAnimation].shapes[v.name].frames) do
+                if timeline.keyframes[val] == nil then timeline.keyframes[val] = {} end
+                timeline.keyframes[val][k] = ui:createFrame(Color(0, 255, 255))
+                local lerptype = timeline.animations[selectedAnimation].shapes[v.name].frames[k].interpolation
+                if lerptype == "linear" then
+                    timeline.keyframes[val][k].Color = Color(255, 255, 255)
+                elseif lerptype == "quadraticIn" then
+                    timeline.keyframes[val][k].Color = Color(255, 255, 0)
+                elseif lerptype == "quadraticOut" then
+                    timeline.keyframes[val][k].Color = Color(255, 255, 50)
+                elseif lerptype == "quadraticInOut" then
+                    timeline.keyframes[val][k].Color = Color(200, 200, 0)
+                elseif lerptype == "cubicIn" then
+                    timeline.keyframes[val][k].Color = Color(0, 255, 255)
+                elseif lerptype == "cubicOut" then
+                    timeline.keyframes[val][k].Color = Color(50, 200, 255)
+                elseif lerptype == "cubicInOut" then
+                    timeline.keyframes[val][k].Color = Color(0, 200, 200)
+                elseif lerptype == "exponentialIn" then
+                    timeline.keyframes[val][k].Color = Color(255, 0, 0)
+                elseif lerptype == "exponentialOut" then
+                    timeline.keyframes[val][k].Color = Color(200, 0, 0)
+                elseif lerptype == "exponentialInOut" then
+                    timeline.keyframes[val][k].Color = Color(200, 20, 20)
+                elseif lerptype == "circleIn" then
+                    timeline.keyframes[val][k].Color = Color(0, 255, 0)
+                elseif lerptype == "circleOut" then
+                    timeline.keyframes[val][k].Color = Color(50, 255, 50)
+                elseif lerptype == "circleInOut" then
+                    timeline.keyframes[val][k].Color = Color(0, 200, 0)
+                end
+                timeline.keyframes[val][k].size = Number2(14, 14.5)
+                timeline.keyframes[val][k].pos = Number2(273 + (k)*timeline.stepSize-timeline.frameOffset, timeline.buttons[i].pos.Y + 8)
+                timeline.keyframes[val][k].Rotation.Z = math.pi/4
+                if timeline.keyframes[val][k].pos.X < 273 or timeline.keyframes[val][k].pos.X > Screen.Width-266 then
+                    timeline.keyframes[val][k]:remove()
+                    timeline.keyframes[val][k] = nil
                 end
             end
         end
     end
 
     timeline.updateObjects = function()
+        if model == nil then return end
         hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
             local left_keyframe = 0
             local right_keyframe = 0
@@ -457,12 +532,12 @@ createUI = function()
                 s.LocalRotation:Slerp(
                     timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].rotation,
                     timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].rotation,
-                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].interpolation](time)
+                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].interpolation](time)
                 )
                 s.LocalPosition:Lerp(
                     timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].position,
                     timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].position,
-                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].interpolation](time)
+                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].interpolation](time)
                 )
             end
         end)
@@ -471,22 +546,205 @@ createUI = function()
     timeline.cursor = ui:createFrame(Color(255, 255, 0))
     timeline.cursor.size = Number2(11, 12)
     timeline.cursor.pos = Number2(265, 215)
+    timeline.cursor.onPress = function() return end
+    timeline.cursor.onDrag = function(self, pe)
+        local x = math.floor(pe.X * Screen.Width)
+        local y = math.floor(pe.Y * Screen.Width)
+
+        timeline.selectedTime = math.min(math.max(0, (x)-270), timeline.background.Width-295) // timeline.stepSize * timeline.stepSize
+        timeline.indexTime = (timeline.selectedTime+timeline.frameOffset) // timeline.stepSize
+        timeline.cursorLine.pos.X = timeline.selectedTime + 270
+        timeline.cursor.pos.X = timeline.selectedTime + 267
+        if not timeline.updated then
+            timeline.updateObjects()
+            timeline.updateTime()
+        end
+        timeline.updated = true
+    end
 
     timeline.cursorLine = ui:createFrame(Color(255, 255, 255, 0.6))
     timeline.cursorLine.size = Number2(5, 200)
     timeline.cursorLine.pos = Number2(268, 15)
 
-    animationSelector = Object()
-    animationSelector = ui:createFrame(Color(0, 0, 0, 0.5))
-    animationSelector.size = Number2(260, 320)
-    animationSelector.pos = Number2(10, 230)
-    animationSelector.onPress = function() return end
+    timeline.animationSelector = ui:createFrame(Color(0, 0, 0, 0.5))
+    timeline.animationSelector.size = Number2(260, 190+32)
+    timeline.animationSelector.pos = Number2(10, 230)
+    timeline.animationSelector.onPress = function() return end
+
+    timeline.animationSelector.text = ui:createText("Animations", Color(255, 255, 255))
+    timeline.animationSelector.text.pos = Number2(10 + 260/2 - (timeline.animationSelector.text.Width / 2), 230 - 5 + 190+32 - timeline.animationSelector.text.Height)
+
+    timeline.animationSelector.buttons = {}
+
+    timeline.animationSelector.moveIndex = 0
+
+    timeline.updateAnimations = function()
+        for k, v in pairs(timeline.animationSelector.buttons) do
+            if timeline.animationSelector.buttons[k] ~= nil then
+                timeline.animationSelector.buttons[k].pos = Number2(-1000, -1000)
+            end
+        end
+
+        local index = 1
+
+        for k, v in pairs(timeline.animations) do
+            if index - timeline.animationSelector.moveIndex > 0 and index < timeline.animationSelector.moveIndex + 6 then
+                timeline.animationSelector.buttons[k].pos = Number2(15, 416 - (index - timeline.animationSelector.moveIndex) * 36)
+            end
+            
+            index = index + 1
+        end
+    end
+
+    timeline.createAnimationButton = ui:createButton("Create", {
+        color = Color(0, 0, 0, 0.6), colorPressed = Color(30, 30, 30, 0.6),
+        borders = false, shadow = false
+    })
+
+    timeline.createAnimationButton.pos = Number2(10, 457)
+    timeline.createAnimationButton.Height = 36
+    timeline.createAnimationButton.onRelease = function()
+        if selectedAnimation == nil then
+            print("❌ Animations are not loaded. Please load model first.")
+            return
+        end
+
+        timeline.createAnimationButton:disable()
+
+        timeline.createAnimationEdit = ui:createTextInput("animation_" .. math.random(1000, 9999), "animation name")
+        timeline.createAnimationEdit.Width = 260 - 38
+        timeline.createAnimationEdit.pos = Number2(10, 498)
+
+        timeline.createAnimationOk = ui:createButton("✅", {
+            color = Color(0, 0, 0, 0.6), colorPressed = Color(30, 30, 30, 0.6),
+            borders = false, shadow = false
+        })
+        timeline.createAnimationOk.pos = Number2(270-38, 498)
+        timeline.createAnimationOk.Width = 38 timeline.createAnimationOk.Height = 38
+        timeline.createAnimationOk.onRelease = function()
+            if timeline.createAnimationEdit.Text == nil then
+                timeline.createAnimationEdit.Text = "animation_" .. math.random(1000, 9999)
+            end
+            selectedAnimation = timeline.createAnimationEdit.Text
+
+            timeline.animationSelector.buttons[selectedAnimation] = ui:createButton(selectedAnimation, {
+                color = Color(0, 0, 0, 0.6), colorPressed = Color(30, 30, 30, 0.6),
+                borders = false, shadow = false
+            })
+            timeline.animationSelector.buttons[selectedAnimation].Height = 36
+            timeline.animationSelector.buttons[selectedAnimation].Width = 250
+            timeline.animationSelector.buttons[selectedAnimation].animation = selectedAnimation
+
+            timeline.animationSelector.buttons[selectedAnimation].onRelease = function(self)
+                selectedAnimation = self.animation
+                timeline.indexTime = 0
+                timeline.offsetTime = 0
+                timeline.cursorLine.pos.X = 268
+                timeline.cursor.pos.X = 267
+
+                timeline.update()
+                timeline.updateTime()
+                timeline.updateAnimations()
+                timeline.updateObjects()
+            end
+
+            timeline.indexTime = 0
+            timeline.offsetTime = 0
+            timeline.cursorLine.pos.X = 268
+            timeline.cursor.pos.X = 267
+
+            timeline.animations[selectedAnimation] = {
+                shapes = {},
+                maxTime = 0,
+            }
+            
+            hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
+                timeline.animations[selectedAnimation].shapes[s.name] = {
+                    frames = {}
+                }
+            end)
+
+            timeline.update()
+            timeline.updateObjects()
+            timeline.updateTime()
+            timeline.updateAnimations()
+            
+            timeline.createAnimationButton:enable()
+
+            timeline.createAnimationEdit:remove()
+            timeline.createAnimationEdit = nil
+
+            timeline.createAnimationOk:remove()
+            timeline.createAnimationOk = nil
+        end
+    end
+
+    timeline.removeAnimationButton = ui:createButton("Remove", {
+        color = Color(0, 0, 0, 0.6), colorPressed = Color(30, 30, 30, 0.6),
+        borders = false, shadow = false
+    })
+    timeline.removeAnimationButton.pos = Number2(270-86, 457)
+    timeline.removeAnimationButton.Height = 36
+    timeline.removeAnimationButton.onRelease = function()
+        local count = 0
+
+        for k, v in pairs(timeline.animations) do
+            count = count + 1
+        end
+
+        if selectedAnimation ~= nil and count > 1 then
+            if selectedAnimation == "default" then
+                print("❌ Cannot remove default animation.")
+
+                return
+            end
+
+            timeline.animationSelector.buttons[selectedAnimation]:remove()
+            timeline.animationSelector.buttons[selectedAnimation] = nil
+            timeline.animations[selectedAnimation] = nil
+
+            selectedAnimation = "default"
+
+            timeline.update()
+            timeline.updateObjects()
+            timeline.updateTime()
+            timeline.updateAnimations()
+        end
+    end
+
+    timeline.animationSelector.downButton = ui:createButton("⬇", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.animationSelector.downButton.pos = Number2(96+8, 457)
+    timeline.animationSelector.downButton.Height = 36 timeline.animationSelector.downButton.Width = 36
+    timeline.animationSelector.downButton.onRelease = function()
+        local count = 0
+
+        for k, v in pairs(timeline.animationSelector.buttons) do
+            count = count + 1
+        end
+
+        if timeline.animationSelector.moveIndex < count - 5 then
+            timeline.animationSelector.moveIndex = timeline.animationSelector.moveIndex + 1
+            timeline.updateAnimations()
+        end
+    end
+    
+    timeline.animationSelector.upButton = ui:createButton("⬆", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.animationSelector.upButton.pos = Number2(96+36+8, 457)
+    timeline.animationSelector.upButton.Height = 36 timeline.animationSelector.upButton.Width = 36
+    timeline.animationSelector.upButton.onRelease = function()
+        if timeline.animationSelector.moveIndex > 0 then
+            timeline.animationSelector.moveIndex = timeline.animationSelector.moveIndex - 1
+            timeline.updateAnimations()
+        end
+    end
 end
 
 loadModel = function(model)
     if model == nil then
         return
     end
+
+    loadedModel = model
 
     scrollNumber = 1
 
@@ -517,6 +775,11 @@ loadModel = function(model)
         timeline.buttons[k] = nil
     end
 
+    for k, v in ipairs(timeline.animationSelector.buttons) do
+        timeline.animationSelector.buttons[k]:remove()
+        timeline.animationSelector.buttons[k] = nil
+    end
+
     for k, v in ipairs(timeline.animations) do
         timeline.animations[k]:remove()
         timeline.animations[k] = nil
@@ -525,10 +788,27 @@ loadModel = function(model)
     selectedAnimation = "default"
 
     timeline.animations["default"] = {
-        shapes = {}
+        shapes = {},
+        maxTime = 0,
     }
+    timeline.animationSelector.buttons["default"] = ui:createButton(selectedAnimation, {
+        color = Color(0, 0, 0, 0.6), colorPressed = Color(30, 30, 30, 0.6),
+        borders = false, shadow = false
+    })
+    timeline.animationSelector.buttons["default"].Height = 36
+    timeline.animationSelector.buttons["default"].Width = 250
+    timeline.animationSelector.buttons["default"].onRelease = function()
+        selectedAnimation = "default"
+        timeline.indexTime = 0
+        timeline.offsetTime = 0
+        timeline.cursorLine.pos.X = 268
+        timeline.cursor.pos.X = 267
 
-    model.Position = startPos
+        timeline.update()
+        timeline.updateTime()
+        timeline.updateAnimations()
+        timeline.updateObjects()
+    end
 
     hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
         table.insert(timeline.shapes, s)
@@ -541,12 +821,12 @@ loadModel = function(model)
         s.defaultPosition = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z)
         s.defaultRotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
 
-        s.addKeyframe = function(self, time)
+        s.addKeyframe = function(self, time, interp)
             if timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] == nil then
                 timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] = {
                     position = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z),
                     rotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z),
-                    interpolation = "linear"
+                    interpolation = interp
                 }
                 checkforKeyframe(time)
             else
@@ -554,7 +834,7 @@ loadModel = function(model)
                 timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] = {
                     position = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z),
                     rotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z),
-                    interpolation = "linear"
+                    interpolation = interp
                 }
                 checkforKeyframe(time)
             end
@@ -612,24 +892,85 @@ loadModel = function(model)
     end
 
     timeline.update()
+    timeline.updateAnimations()
+    timeline.updateTime()
 end
 
 createLerps = function()
     lerp = {}
 
     lerp.linear = function(t) return t end
-    lerp.quadraticIn = function(t) return t*t end
-    lerp.cubicIn = function(t) return t*t*t end
-    lerp.quadraticOut = function(t) return t*(2-t) end
-    lerp.cubicOut = function(t) return t*(2-t)*(2-t) end
+    lerp.quadraticIn = function(t) return t * t end
+    lerp.cubicIn = function(t) return t * t * t end
+    lerp.quadraticOut = function(t) return t * (2 - t) end
+    lerp.cubicOut = function(t) return 1 - (1 - t) ^ 3 end
+
+    -- Additional interpolation functions
+    lerp.quadraticInOut = function(t)
+        if t < 0.5 then
+            return 2 * t * t
+        else
+            return -1 + (4 - 2 * t) * t
+        end
+    end
+
+    lerp.cubicInOut = function(t)
+        if t < 0.5 then
+            return 4 * t * t * t
+        else
+            return (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
+        end
+    end
+
+    lerp.exponentialIn = function(t)
+        return t == 0 and 0 or 2^(10 * (t - 1))
+    end
+
+    lerp.exponentialOut = function(t)
+        return t == 1 and 1 or 1 - 2^(-10 * t)
+    end
+
+    lerp.exponentialInOut = function(t)
+        if t == 0 then return 0 end
+        if t == 1 then return 1 end
+        if t < 0.5 then
+            return 2^(20 * t - 10) / 2
+        else
+            return (2 - 2^(-20 * t + 10)) / 2
+        end
+    end
+
+    lerp.circleIn = function(t)
+        return 1 - math.sqrt(1 - t * t)
+    end
+
+    lerp.circleOut = function(t)
+        return math.sqrt(1 - (t - 1) * (t - 1))
+    end
+
+    lerp.circleInOut = function(t)
+        if t < 0.5 then
+            return (1 - math.sqrt(1 - 4 * t * t)) / 2
+        else
+            return (math.sqrt(1 - (2 * t - 2) * (2 * t - 2)) + 1) / 2
+        end
+    end
+
+    -- Clamps the value of t between 0 and 1
+    local function clamp(t)
+        if t < 0 then return 0 end
+        if t > 1 then return 1 end
+        return t
+    end
 
     lerp.interpolate = function(a, b, t, type)
+        t = clamp(t)
         t = lerp[type](t)
-
-        return a*(1-t) + b*t
+        return a * (1 - t) + b * t
     end
 end
 
+
 checkforKeyframe = function(time)
-    if timeline.maxTime < time then timeline.maxTime = time end
+    if timeline.animations[selectedAnimation].maxTime < time then timeline.animations[selectedAnimation].maxTime = time end
 end
