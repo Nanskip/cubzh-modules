@@ -18,6 +18,7 @@ Client.OnStart = function()
     playing = false
     playSpeed = 12
     selectedInterp = "linear"
+    loadedModelName = ""
     --Player:SetParent(nil)
 
     startPos = Number3(Map.Width*Map.Scale.X/2, Map.Height*Map.Scale.Y/1.2, Map.Depth*Map.Scale.Z/2)
@@ -126,10 +127,27 @@ end
 
 createUI = function()
     buttons = {}
+    
+    buttons.hideInterface = ui:createButton("Hide Interface", {shadow = false, color = Color(0, 0, 0, 0.2), colorPressed = Color(0, 0, 0, 0.4)})
+    buttons.hideInterface.Height = buttons.hideInterface.Height + 8
+    buttons.hideInterface.pos = Number2(
+        Screen.Width - buttons.hideInterface.size.X - 8 - Screen.SafeArea.Right, Screen.Height - buttons.hideInterface.size.Y - 8 - Screen.SafeArea.Top
+    )
+    buttons.hideInterface.onRelease = function()
+        if timeline.IsHidden then
+            timeline.IsHidden = false
+            World:GetChild(2).Layers = {12}
+        else
+            timeline.IsHidden = true
+            World:GetChild(2).Layers = {}
+        end
+    end
 
     buttons.loadModel = ui:createButton("Load Model")
     buttons.loadModel.size = Number2(buttons.loadModel.size.X, buttons.loadModel.size.Y + 8)
-    buttons.loadModel.pos = Number2(Screen.Width - buttons.loadModel.size.X - 8 - Screen.SafeArea.Right, Screen.Height - buttons.loadModel.size.Y - 8 - Screen.SafeArea.Top)
+    buttons.loadModel.pos = Number2(
+        Screen.Width - buttons.loadModel.size.X - 8 - Screen.SafeArea.Right - buttons.hideInterface.Width - 5, Screen.Height - buttons.loadModel.size.Y - 8 - Screen.SafeArea.Top
+    )
     -- stolen from S&Cubzh 2 by fab3kleuuu
     buttons.loadModel.onPress = function()
         local function maxModalWidth()
@@ -155,18 +173,57 @@ createUI = function()
         local items_gallery = gallery:create(maxModalWidth, maxModalHeight, updateModalPosition)
         local grid = items_gallery.contentStack[1].node
         grid.onOpen = function(self, cell)
+            loadedModelName = cell.itemFullName
             Object:Load(cell.itemFullName, function(self)
                 if model ~= nil then
                     model:SetParent(nil)
                 end
                 model = self
-                model:SetParent(World)
                 loadModel(model)
             end)
             items_gallery:close()
         end
     end
     -- end of stolen part :3
+
+    buttons.import = ui:createButton("Import", {shadow = false, color = Color(8, 191, 22), colorPressed = Color(14, 153, 24)})
+    buttons.import.Width = 90 buttons.import.Height = 40
+    buttons.import.pos = Number2(10, Screen.Height - buttons.import.Height - 10 - Screen.SafeArea.Top)
+    buttons.import.onRelease = function()
+        File:OpenAndReadAll(function(success, result)
+            if not success then
+                print("Can't open the file.")
+                return
+            end
+
+            if result == nil then
+                print("File is not selected.")
+                return
+            end
+
+            local str = result:ToString()
+            timeline.animations = JSON:Decode(str)["animations"]
+            Object:Load(JSON:Decode(str)["shape"], function(self)
+                model = self
+                loadModel(self, true)
+                timeline.update()
+                timeline.updateTime()
+                timeline.updateAnimations()
+                timeline.updateObjects()
+            end)
+        end)
+    end
+    buttons.export = ui:createButton("Export", {shadow = false, color = Color(23, 173, 173), colorPressed = Color(21, 130, 130)})
+    buttons.export.Width = 90 buttons.export.Height = 40
+    buttons.export.pos = Number2(10, Screen.Height - buttons.export.Height*2 - 15 - Screen.SafeArea.Top)
+    buttons.export.onRelease = function()
+        local save = {
+            ["animations"] = timeline.animations,
+            ["shape"] = loadedModelName
+        }
+
+        Dev:CopyToClipboard(JSON:Encode(save))
+    end
 
     timeline = Object()
 
@@ -185,6 +242,7 @@ createUI = function()
 
     timeline.updateTime = function()
         timeline.maxTime = timeline.animations[selectedAnimation].maxTime
+        if timeline.maxTime == nil then timeline.maxTime = 0 end
         timeline.time.Text = "Time: " .. string.format("%.0f", timeline.indexTime) .. "/" .. timeline.maxTime
     end
 
@@ -474,7 +532,8 @@ createUI = function()
                     timeline.keyframes[val][k].Color = Color(0, 200, 0)
                 end
                 timeline.keyframes[val][k].size = Number2(14, 14.5)
-                timeline.keyframes[val][k].pos = Number2(273 + (k)*timeline.stepSize-timeline.frameOffset, timeline.buttons[i].pos.Y + 8)
+                local a = string.gsub(k, "_", "")
+                timeline.keyframes[val][k].pos = Number2(273 + tonumber(a)*timeline.stepSize-timeline.frameOffset, timeline.buttons[i].pos.Y + 8)
                 timeline.keyframes[val][k].Rotation.Z = math.pi/4
                 if timeline.keyframes[val][k].pos.X < 273 or timeline.keyframes[val][k].pos.X > Screen.Width-266 then
                     timeline.keyframes[val][k]:remove()
@@ -492,9 +551,11 @@ createUI = function()
 
             local keyframes = {}
             for _, text in pairs(timeline.animations[selectedAnimation].shapes[s.name].frames) do
-                table.insert(keyframes, tonumber(_))
-                if tonumber(_) > right_keyframe then
-                    right_keyframe = tonumber(_)
+                local a = string.gsub(_, "_", "")
+                a = tonumber(a)
+                table.insert(keyframes, a)
+                if a > right_keyframe then
+                    right_keyframe = a
                 end
             end
             local invertedKeyframes = {}
@@ -506,7 +567,7 @@ createUI = function()
                 return
             end
 
-            if timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(timeline.indexTime)] ~= nil then
+            if timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(timeline.indexTime) .. "_"] ~= nil then
                 left_keyframe = timeline.indexTime
                 right_keyframe = timeline.indexTime
             else
@@ -528,16 +589,37 @@ createUI = function()
                 time = (timeline.indexTime - left_keyframe) / (right_keyframe - left_keyframe)
             end
 
-            if timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].rotation ~= nil and timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].rotation ~= nil then
+            if timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation ~= nil and 
+            timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation ~= nil then
+                local leftrot = Rotation(
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ex"],
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ey"],
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ez"]
+                )
+                local rightrot = Rotation(
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ex"],
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ey"],
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ez"]
+                )
+                local leftpos = Number3(
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_x"],
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_y"],
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_z"]
+                )
+                local rightpos = Number3(
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_x"],
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_y"],
+                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_z"]
+                )
                 s.LocalRotation:Slerp(
-                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].rotation,
-                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].rotation,
-                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].interpolation](time)
+                    leftrot,
+                    rightrot,
+                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                 )
                 s.LocalPosition:Lerp(
-                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].position,
-                    timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(right_keyframe)].position,
-                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe)].interpolation](time)
+                    leftpos,
+                    rightpos,
+                    lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                 )
             end
         end)
@@ -739,12 +821,14 @@ createUI = function()
     end
 end
 
-loadModel = function(model)
+loadModel = function(model, loading)
     if model == nil then
         return
     end
 
+    model:SetParent(World)
     loadedModel = model
+    timeline.currentId = 0
 
     scrollNumber = 1
 
@@ -775,22 +859,25 @@ loadModel = function(model)
         timeline.buttons[k] = nil
     end
 
-    for k, v in ipairs(timeline.animationSelector.buttons) do
+    for k, v in pairs(timeline.animationSelector.buttons) do
         timeline.animationSelector.buttons[k]:remove()
         timeline.animationSelector.buttons[k] = nil
     end
 
-    for k, v in ipairs(timeline.animations) do
-        timeline.animations[k]:remove()
-        timeline.animations[k] = nil
-    end
-
     selectedAnimation = "default"
 
-    timeline.animations["default"] = {
-        shapes = {},
-        maxTime = 0,
-    }
+    if not loading then
+        for k, v in ipairs(timeline.animations) do
+            timeline.animations[k]:remove()
+            timeline.animations[k] = nil
+        end
+
+        timeline.animations["default"] = {
+            shapes = {},
+            maxTime = 0,
+        }
+    end
+
     timeline.animationSelector.buttons["default"] = ui:createButton(selectedAnimation, {
         color = Color(0, 0, 0, 0.6), colorPressed = Color(30, 30, 30, 0.6),
         borders = false, shadow = false
@@ -822,8 +909,8 @@ loadModel = function(model)
         s.defaultRotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
 
         s.addKeyframe = function(self, time, interp)
-            if timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] == nil then
-                timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] = {
+            if timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time) .. "_"] == nil then
+                timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time) .. "_"] = {
                     position = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z),
                     rotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z),
                     interpolation = interp
@@ -831,7 +918,7 @@ loadModel = function(model)
                 checkforKeyframe(time)
             else
                 self:removeKeyframe(time)
-                timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] = {
+                timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time) .. "_"] = {
                     position = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z),
                     rotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z),
                     interpolation = interp
@@ -843,7 +930,7 @@ loadModel = function(model)
         end
 
         s.removeKeyframe = function(self, time)
-            timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time)] = nil
+            timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time) .. "_"] = nil
 
             timeline.update()
         end
@@ -851,7 +938,7 @@ loadModel = function(model)
 
     for k, v in ipairs(timeline.shapes) do
         local name = v.Name
-        if name == nil or name == "(null)" then name = "shape_" .. math.random(1000, 9999) end
+        if name == nil or name == "(null)" then name = "shape_" .. timeline.currentId timeline.currentId = timeline.currentId + 1 end
         v.name = name .. #timeline.buttons
         timeline.buttons[k] = ui:createButton(name .. " [#" .. #timeline.buttons .. "]", {borders = false, color = Color(0.2, 0.2, 0.2, 0.3), colorPressed = Color(0.3, 0.3, 0.3, 0.3), shadow = false})
         timeline.buttons[k].pos = Number2(15, 15 + ((timeline.buttons[k].Height + 5))*(k-1))
@@ -887,8 +974,10 @@ loadModel = function(model)
             gizmo:setObject(v)
         end
 
-        timeline.animations[selectedAnimation].shapes[v.name] = {name = v.name}
-        timeline.animations[selectedAnimation].shapes[v.name].frames = {}
+        if not loading then
+            timeline.animations[selectedAnimation].shapes[v.name] = {name = v.name}
+            timeline.animations[selectedAnimation].shapes[v.name].frames = {}
+        end
     end
 
     timeline.update()
@@ -969,7 +1058,6 @@ createLerps = function()
         return a * (1 - t) + b * t
     end
 end
-
 
 checkforKeyframe = function(time)
     if timeline.animations[selectedAnimation].maxTime < time then timeline.animations[selectedAnimation].maxTime = time end
