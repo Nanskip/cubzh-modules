@@ -150,13 +150,13 @@ nanimator.add = function(object, name)
                     )
                     s.LocalRotation = Rotation(
                         nanimator.lerp.interpolate(leftrot.X + s.baseRot.X, rightrot.X + s.baseRot.X, time, type),
-                        nanimator.lerp.interpolate(leftrot.X + s.baseRot.X, rightrot.X + s.baseRot.X, time, type),
-                        nanimator.lerp.interpolate(leftrot.X + s.baseRot.X, rightrot.X + s.baseRot.X, time, type)
+                        nanimator.lerp.interpolate(leftrot.Y + s.baseRot.Y, rightrot.Y + s.baseRot.Y, time, type),
+                        nanimator.lerp.interpolate(leftrot.Z + s.baseRot.Z, rightrot.Z + s.baseRot.Z, time, type)
                     )
                     s.LocalPosition = Number3(
                         nanimator.lerp.interpolate(leftpos.X + s.basePos.X, rightpos.X + s.basePos.X, time, type),
-                        nanimator.lerp.interpolate(leftpos.X + s.basePos.X, rightpos.X + s.basePos.X, time, type),
-                        nanimator.lerp.interpolate(leftpos.X + s.basePos.X, rightpos.X + s.basePos.X, time, type)
+                        nanimator.lerp.interpolate(leftpos.Y + s.basePos.Y, rightpos.Y + s.basePos.Y, time, type),
+                        nanimator.lerp.interpolate(leftpos.Z + s.basePos.Z, rightpos.Z + s.basePos.Z, time, type)
                     )
                 end
             end)
