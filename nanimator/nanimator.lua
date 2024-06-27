@@ -156,13 +156,13 @@ nanimator.add = function(object, name)
                     end
 
                     s.LocalRotation:Slerp(
-                        leftrot - rot,
-                        rightrot - rot,
+                        leftrot,
+                        rightrot,
                         nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                     )
                     s.LocalPosition:Lerp(
-                        leftpos - pos,
-                        rightpos - pos,
+                        leftpos,
+                        rightpos,
                         nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                     )
                 end
