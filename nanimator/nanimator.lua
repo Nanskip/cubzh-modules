@@ -76,26 +76,6 @@ nanimator.add = function(object, name)
 
                 return
             end
-            --[[
-            hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
-                local rot = self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(math.ceil(self.currentFrame)) .. "_"].rotation
-                local pos = self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(math.ceil(self.currentFrame)) .. "_"].position
-
-                print(s.baseRot, s.basePos)
-
-                if rot ~= nil and pos ~= nil then
-                    s.LocalRotation = Rotation(
-                        s.baseRot.X + rot["_ex"],
-                        s.baseRot.Y + rot["_ey"],
-                        s.baseRot.Z + rot["_ez"]
-                    )
-                    s.LocalPosition = Number3(
-                        s.basePos.X + pos["_x"],
-                        s.basePos.Y + pos["_y"],
-                        s.basePos.Z + pos["_z"]
-                    )
-                end
-            end)]]--
 
             hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
 
@@ -167,8 +147,8 @@ nanimator.add = function(object, name)
                         self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_z"]
                     )
                     s.LocalRotation:Slerp(
-                        leftrot + s.baseRot,
-                        rightrot + s.baseRot,
+                        leftrot * s.baseRot,
+                        rightrot * s.baseRot,
                         nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                     )
                     s.LocalPosition:Lerp(
@@ -227,8 +207,8 @@ nanimator.add = function(object, name)
             end
 
             hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
-                s.baseRot = Rotation(s.Rotation.X, s.Rotation.Y, s.Rotation.Z)
-                s.basePos = Number3(s.Position.X, s.Position.Y, s.Position.Z)
+                s.baseRot = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
+                s.basePos = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z)
             end)
 
             self.nanplayer.playing = true
