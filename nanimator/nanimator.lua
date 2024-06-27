@@ -227,8 +227,8 @@ nanimator.add = function(object, name)
             end
 
             hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
-                s.baseRot = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
-                s.basePos = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z)
+                s.baseRot = Rotation(s.Rotation.X, s.Rotation.Y, s.Rotation.Z)
+                s.basePos = Number3(s.Position.X, s.Position.Y, s.Position.Z)
             end)
 
             self.nanplayer.playing = true
