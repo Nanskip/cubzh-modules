@@ -147,8 +147,8 @@ nanimator.add = function(object, name)
                         self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_z"]
                     )
 
-                    local pos = s:GetParent().basePos
-                    local rot = s:GetParent().baseRot
+                    local pos = Number3(0, 0, 0)
+                    local rot = Rotation(0, 0, 0)
 
                     if type(s:GetParent()) == "World" then
                         pos = s.basePos
