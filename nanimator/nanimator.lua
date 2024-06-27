@@ -123,8 +123,6 @@ nanimator.add = function(object, name)
                 if left_keyframe ~= nil and right_keyframe ~= nil and right_keyframe ~= left_keyframe then
                     time = (self.currentFrame - left_keyframe) / (right_keyframe - left_keyframe)
                 end
-
-                local type = self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation
     
                 if self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation ~= nil and 
                 self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation ~= nil then
@@ -148,15 +146,15 @@ nanimator.add = function(object, name)
                         self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_y"],
                         self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_z"]
                     )
-                    s.LocalRotation = Rotation(
-                        nanimator.lerp.interpolate(leftrot.X + s.baseRot.X, rightrot.X + s.baseRot.X, time, type),
-                        nanimator.lerp.interpolate(leftrot.Y + s.baseRot.Y, rightrot.Y + s.baseRot.Y, time, type),
-                        nanimator.lerp.interpolate(leftrot.Z + s.baseRot.Z, rightrot.Z + s.baseRot.Z, time, type)
+                    s.LocalRotation:Slerp(
+                        leftrot + s:GetParent().LocalRotation,
+                        rightrot + s:GetParent().LocalRotation,
+                        nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                     )
-                    s.LocalPosition = Number3(
-                        nanimator.lerp.interpolate(leftpos.X + s.basePos.X, rightpos.X + s.basePos.X, time, type),
-                        nanimator.lerp.interpolate(leftpos.Y + s.basePos.Y, rightpos.Y + s.basePos.Y, time, type),
-                        nanimator.lerp.interpolate(leftpos.Z + s.basePos.Z, rightpos.Z + s.basePos.Z, time, type)
+                    s.LocalPosition:Lerp(
+                        leftpos + s:GetParent().LocalPosition,
+                        rightpos + s:GetParent().LocalPosition,
+                        nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                     )
                 end
             end)
