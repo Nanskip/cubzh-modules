@@ -48,11 +48,11 @@ nanimator.add = function(object, name)
         local currentId = 0
 
         hierarchyActions:applyToDescendants(object,  { includeRoot = true }, function(s)
-            local name = s.Name .. currentId
+            local name = s.Name
             if name == nil or name == "(null)" then
-                name = "shape_" .. currentId
+                name = "shape_"
             end
-            s.name = name
+            s.name = name .. currentId
             currentId = currentId + 1
         end)
 
