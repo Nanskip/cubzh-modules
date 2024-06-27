@@ -158,8 +158,8 @@ nanimator.add = function(object, name)
                     leftrot = Rotation(leftrot.X + rot.X, leftrot.Y + rot.Y, leftrot.Z + rot.Z)
                     rightrot = Rotation(rightrot.X + rot.X, rightrot.Y + rot.Y, rightrot.Z + rot.Z)
 
-                    leftpos = Number3(s.Forward.X*(leftpos.X + s.pos.X), s.Forward.Y*(leftpos.Y + s.pos.Y), s.Forward.Z*(leftpos.Z + s.pos.Z))
-                    rightpos = Number3(s.Forward.X*(rightpos.X + s.pos.X), s.Forward.Y*(rightpos.Y + s.pos.Y), s.Forward.Z*(rightpos.Z + s.pos.Z))
+                    leftpos = Number3(s.Forward.X*(leftpos.X + pos.X), s.Forward.Y*(leftpos.Y + pos.Y), s.Forward.Z*(leftpos.Z + pos.Z))
+                    rightpos = Number3(s.Forward.X*(rightpos.X + pos.X), s.Forward.Y*(rightpos.Y + pos.Y), s.Forward.Z*(rightpos.Z + pos.Z))
 
                     s.LocalRotation:Slerp(
                         leftrot * rot,
