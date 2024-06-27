@@ -50,7 +50,7 @@ nanimator.add = function(object, name)
         hierarchyActions:applyToDescendants(object,  { includeRoot = true }, function(s)
             local name = s.Name
             if name == nil or name == "(null)" then
-                name = "shape_" .. currentId .. currentId
+                name = "shape_" .. currentId
                 s.name = name
                 currentId = currentId + 1
             end
@@ -154,6 +154,8 @@ nanimator.add = function(object, name)
                         pos = s.basePos
                         rot = s.baseRot
                     end
+
+                    --leftpos = 
 
                     s.LocalRotation:Slerp(
                         leftrot + rot,
