@@ -146,14 +146,23 @@ nanimator.add = function(object, name)
                         self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_y"],
                         self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_z"]
                     )
+
+                    local pos = s:GetParent().LocalPosition
+                    local rot = s:GetParent().LocalRotation
+
+                    if type(s:GetParent()) == "World" then
+                        pos = s.basePos
+                        rot = s.baseRot
+                    end
+
                     s.LocalRotation:Slerp(
-                        leftrot + s:GetParent().LocalRotation,
-                        rightrot + s:GetParent().LocalRotation,
+                        leftrot + rot,
+                        rightrot + rot,
                         nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                     )
                     s.LocalPosition:Lerp(
-                        leftpos + s:GetParent().LocalPosition,
-                        rightpos + s:GetParent().LocalPosition,
+                        leftpos + pos,
+                        rightpos + pos,
                         nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                     )
                 end
