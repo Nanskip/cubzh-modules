@@ -48,12 +48,12 @@ nanimator.add = function(object, name)
         local currentId = 0
 
         hierarchyActions:applyToDescendants(object,  { includeRoot = true }, function(s)
-            local name = s.Name
+            local name = s.Name .. currentId
             if name == nil or name == "(null)" then
                 name = "shape_" .. currentId
-                currentId = currentId + 1
             end
             s.name = name
+            currentId = currentId + 1
         end)
 
         object.nanplayer.Tick = function(self, dt)
