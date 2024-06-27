@@ -79,6 +79,19 @@ Client.Tick = function(dt)
             timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
         end
     end
+
+    if buttons.exportText ~= nil then
+        if buttons.exportTextTimer > 1 then
+            if buttons.exportTextTimer < 255 then
+                buttons.exportText:_setColor(Color(0, 0, 0, buttons.exportTextTimer//4))
+                buttons.exportText2:_setColor(Color(255, 255, 255, buttons.exportTextTimer))
+            else
+                buttons.exportText:_setColor(Color(0, 0, 0, 255//4))
+                buttons.exportText2:_setColor(Color(255, 255, 255, 255))
+            end
+            buttons.exportTextTimer = buttons.exportTextTimer - 1
+        end
+    end
 end
 
 Pointer.Down = function( pointerEvent )
@@ -223,7 +236,14 @@ createUI = function()
         }
 
         Dev:CopyToClipboard(JSON:Encode(save))
+        buttons.exportTextTimer = 400
     end
+
+    buttons.exportText = ui:createText("! Copied to clipboard.", Color(0, 0, 0, 0.5))
+    buttons.exportText.pos = Number2(buttons.export.pos.X + buttons.export.Width + 12, buttons.export.pos.Y + 4)
+    buttons.exportText2 = ui:createText("! Copied to clipboard.", Color(255, 255, 255))
+    buttons.exportText2.pos = Number2(buttons.export.pos.X + buttons.export.Width + 10, buttons.export.pos.Y + 6)
+    buttons.exportTextTimer = 255
 
     timeline = Object()
 
@@ -676,6 +696,8 @@ createUI = function()
             
             index = index + 1
         end
+
+        timeline.animations[selectedAnimation].playSpeed = playSpeed
     end
 
     timeline.createAnimationButton = ui:createButton("Create", {
@@ -738,6 +760,7 @@ createUI = function()
             timeline.animations[selectedAnimation] = {
                 shapes = {},
                 maxTime = 0,
+                playSpeed = 12
             }
             
             hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
@@ -938,7 +961,9 @@ loadModel = function(model, loading)
 
     for k, v in ipairs(timeline.shapes) do
         local name = v.Name
-        if name == nil or name == "(null)" then name = "shape_" .. timeline.currentId timeline.currentId = timeline.currentId + 1 end
+        if name == nil or name == "(null)" then name = ("shape_" .. timeline.currentId)
+            timeline.currentId = timeline.currentId + 1
+        end
         v.name = name .. #timeline.buttons
         timeline.buttons[k] = ui:createButton(name .. " [#" .. #timeline.buttons .. "]", {borders = false, color = Color(0.2, 0.2, 0.2, 0.3), colorPressed = Color(0.3, 0.3, 0.3, 0.3), shadow = false})
         timeline.buttons[k].pos = Number2(15, 15 + ((timeline.buttons[k].Height + 5))*(k-1))
@@ -1060,5 +1085,7 @@ createLerps = function()
 end
 
 checkforKeyframe = function(time)
-    if timeline.animations[selectedAnimation].maxTime < time then timeline.animations[selectedAnimation].maxTime = time end
+    if timeline.animations[selectedAnimation].maxTime < time then
+        timeline.animations[selectedAnimation].maxTime = time
+    end
 end
