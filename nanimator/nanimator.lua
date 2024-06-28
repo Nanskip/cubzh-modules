@@ -49,7 +49,7 @@ nanimator.add = function(object, name)
 
         hierarchyActions:applyToDescendants(object,  { includeRoot = true }, function(s)
             local name = s.Name
-            if type(s) ~= "shape" and type(s) ~= "MutableShape" then
+            if type(s) ~= "Shape" and type(s) ~= "MutableShape" then
                 return
             end
             if name == nil or name == "(null)" then
