@@ -10,6 +10,7 @@ Client.OnStart = function()
     gallery = require("gallery") 
     aGizmo = require("gizmo")
     hierarchyActions = require("hierarchyactions")
+    avatar = require("avatar")
 
     Camera:SetModeFree()
     Camera.FOV = 60
@@ -102,7 +103,7 @@ Pointer.Down = function( pointerEvent )
     elseif impact.Object == Map then
         gizmo:setObject(nil)
         return
-    elseif type(impact.Object) ~= "Shape" then
+    elseif type(impact.Object) ~= "Shape" and type(impact.Object) ~= "MutableShape" then
         return
     else
         selectedObject = impact.Object
@@ -157,12 +158,68 @@ createUI = function()
     end
 
     buttons.loadModel = ui:createButton("Load Model")
-    buttons.loadModel.size = Number2(buttons.loadModel.size.X, buttons.loadModel.size.Y + 8)
+    buttons.loadModel.size = Number2(156, buttons.loadModel.size.Y + 8)
     buttons.loadModel.pos = Number2(
         Screen.Width - buttons.loadModel.size.X - 8 - Screen.SafeArea.Right - buttons.hideInterface.Width - 5, Screen.Height - buttons.loadModel.size.Y - 8 - Screen.SafeArea.Top
     )
+
+    buttons.loadModel.onRelease = function()
+        buttons.loadModel:disable()
+
+        buttons.loadShape.pos = Number2(buttons.loadModel.pos.X, buttons.loadModel.pos.Y-buttons.loadModel.size.Y-5)
+        buttons.loadPlayer.pos = Number2(buttons.loadShape.pos.X, buttons.loadShape.pos.Y-buttons.loadShape.size.Y-5)
+    end
+
+    buttons.loadShape = ui:createButton("Shape model")
+    buttons.loadPlayer = ui:createButton("Player model")
+
+    buttons.loadPlayer.size = Number2(buttons.loadPlayer.size.X, buttons.loadPlayer.size.Y+8)
+    buttons.loadShape.size = Number2(buttons.loadPlayer.size.X, buttons.loadPlayer.size.Y)
+
+    buttons.loadShape.pos = Number2(-1000, -1000)
+    buttons.loadPlayer.pos = Number2(-1000, -1000)
+
+    buttons.editPlayerName = ui:createTextInput(Player.Username, "Player username")
+    buttons.editPlayerName.size = Number2(220, 38)
+    buttons.editPlayerName.pos = Number2(-1000, -1000)
+
+    buttons.editPlayerNameEnter = ui:createButton("✅")
+    buttons.editPlayerNameEnter.size = Number2(38, 38)
+    buttons.editPlayerNameEnter.pos = Number2(-1000, -1000)
+
+    buttons.editPlayerNameEnter.onRelease = function()
+        buttons.editPlayerName.pos = Number2(-1000, -1000)
+        buttons.editPlayerNameEnter.pos = Number2(-1000, -1000)
+
+        buttons.loadModel:enable()
+        buttons.loadShape.pos = Number2(-1000, -1000)
+        buttons.loadPlayer.pos = Number2(-1000, -1000)
+        buttons.loadPlayer:enable()
+        buttons.loadShape:enable()
+
+        loadedModelName = buttons.editPlayerName.Text
+        timeline.shapeType = "player"
+
+        if model ~= nil then
+            model:SetParent(nil)
+        end
+    
+        model = avatar:get(loadedModelName)
+        model.Animations.Idle:Stop()
+        model.Animations = nil
+        loadModel(model)
+    end
+
+    buttons.loadPlayer.onRelease = function()
+        buttons.loadPlayer:disable()
+        buttons.loadShape:disable()
+
+        buttons.editPlayerName.pos = Number2(Screen.Width/2 - buttons.editPlayerName.Width/2, Screen.Height/2 + buttons.editPlayerName.Height/2)
+        buttons.editPlayerNameEnter.pos = Number2(buttons.editPlayerName.pos.X + buttons.editPlayerName.Width, buttons.editPlayerName.pos.Y)
+    end
+
     -- stolen from S&Cubzh 2 by fab3kleuuu
-    buttons.loadModel.onPress = function()
+    buttons.loadShape.onRelease = function()
         local function maxModalWidth()
             local computed = Screen.Width - Screen.SafeArea.Left - Screen.SafeArea.Right - 50
             local max = 1400
@@ -187,14 +244,18 @@ createUI = function()
         local grid = items_gallery.contentStack[1].node
         grid.onOpen = function(self, cell)
             loadedModelName = cell.itemFullName
-            Object:Load(cell.itemFullName, function(self)
+            Object:Load(loadedModelName, function(self)
                 if model ~= nil then
                     model:SetParent(nil)
                 end
                 model = self
                 loadModel(model)
+                timeline.shapeType = "shape"
             end)
             items_gallery:close()
+            buttons.loadModel:enable()
+            buttons.loadShape.pos = Number2(-1000, -1000)
+            buttons.loadPlayer.pos = Number2(-1000, -1000)
         end
     end
     -- end of stolen part :3
@@ -215,15 +276,30 @@ createUI = function()
             end
 
             local str = result:ToString()
-            timeline.animations = JSON:Decode(str)["animations"]
-            Object:Load(JSON:Decode(str)["shape"], function(self)
-                model = self
-                loadModel(self, true)
+            loadedModelName = JSON:Decode(str)["shape"]
+            timeline.shapeType = JSON:Decode(str)["shapeType"]
+
+            if timeline.shapeType == "shape" then
+                Object:Load(loadedModelName, function(self)
+                    model = self
+                    loadModel(self, true)
+                    timeline.animations = JSON:Decode(str)["animations"]
+                    timeline.update()
+                    timeline.updateTime()
+                    timeline.updateAnimations()
+                    timeline.updateObjects()
+                end)
+            else
+                model = avatar:get(loadedModelName)
+                model.Animations.Idle:Stop()
+                model.Animations = nil
+                loadModel(model)
+                timeline.animations = JSON:Decode(str)["animations"]
                 timeline.update()
                 timeline.updateTime()
                 timeline.updateAnimations()
                 timeline.updateObjects()
-            end)
+            end
         end)
     end
     buttons.export = ui:createButton("Export", {shadow = false, color = Color(23, 173, 173), colorPressed = Color(21, 130, 130)})
@@ -232,7 +308,8 @@ createUI = function()
     buttons.export.onRelease = function()
         local save = {
             ["animations"] = timeline.animations,
-            ["shape"] = loadedModelName
+            ["shape"] = loadedModelName,
+            ["shapeType"] = timeline.shapeType
         }
 
         Dev:CopyToClipboard(JSON:Encode(save))
@@ -566,6 +643,9 @@ createUI = function()
     timeline.updateObjects = function()
         if model == nil then return end
         hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
+            if timeline.animations[selectedAnimation].shapes[s.name].frames == nil then
+                return
+            end
             local left_keyframe = 0
             local right_keyframe = 0
 
@@ -961,7 +1041,8 @@ loadModel = function(model, loading)
 
     for k, v in ipairs(timeline.shapes) do
         local name = v.Name
-        if name == nil or name == "(null)" then name = ("shape_" .. timeline.currentId)
+        if name == nil or name == "(null)" then
+            name = ("shape_" .. timeline.currentId)
             timeline.currentId = timeline.currentId + 1
         end
         v.name = name .. #timeline.buttons
@@ -999,10 +1080,7 @@ loadModel = function(model, loading)
             gizmo:setObject(v)
         end
 
-        if not loading then
-            timeline.animations[selectedAnimation].shapes[v.name] = {name = v.name}
-            timeline.animations[selectedAnimation].shapes[v.name].frames = {}
-        end
+        timeline.animations[selectedAnimation].shapes[v.name] = {name = v.name, frames = {}}
     end
 
     timeline.update()
