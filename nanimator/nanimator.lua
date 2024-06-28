@@ -31,9 +31,11 @@ nanimator.add = function(object, name)
         return
     end
     hierarchyActions = require("hierarchyactions")
-    
+
     if type(object) == "Player" then
         object = object.Body
+
+        print("⚠️ nanimator.add(): can't add animation to a Player object. Animation added to a Player.Body")
     end
 
     if object.nanplayer == nil then
