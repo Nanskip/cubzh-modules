@@ -50,12 +50,13 @@ nanimator.add = function(object, name)
         hierarchyActions:applyToDescendants(object,  { includeRoot = true }, function(s)
             local name = s.Name
             if type(s) ~= "shape" and type(s) ~= "MutableShape" then
-                if name == nil or name == "(null)" then
-                    name = "shape_"
-                end
-                s.name = name .. currentId
-                currentId = currentId + 1
+                return
             end
+            if name == nil or name == "(null)" then
+                name = "shape_"
+            end
+            s.name = name .. currentId
+            currentId = currentId + 1
         end)
 
         object.nanplayer.Tick = function(self, dt)
@@ -82,96 +83,97 @@ nanimator.add = function(object, name)
             hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
 
                 if type(s) ~= "Shape" and type(s) ~= "MutableShape" then
+                    return
+                end
 
-                    local left_keyframe = 0
-                    local right_keyframe = 0
-        
-                    local keyframes = {}
+                local left_keyframe = 0
+                local right_keyframe = 0
+    
+                local keyframes = {}
 
-                    if self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames == nil then return end
-                    
-                    for _, text in pairs(self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames) do
-                        local a = string.gsub(_, "_", "")
-                        a = tonumber(a)
-                        table.insert(keyframes, a)
-                        if a > right_keyframe then
-                            right_keyframe = a
+                if self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames == nil then return end
+                
+                for _, text in pairs(self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames) do
+                    local a = string.gsub(_, "_", "")
+                    a = tonumber(a)
+                    table.insert(keyframes, a)
+                    if a > right_keyframe then
+                        right_keyframe = a
+                    end
+                end
+                local invertedKeyframes = {}
+                for i=#keyframes, 1, -1 do
+                    invertedKeyframes[i] = keyframes[i]
+                end
+    
+                if #keyframes < 2 then
+                    return
+                end
+    
+                if self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(self.currentFrame) .. "_"] ~= nil then
+                    left_keyframe = self.currentFrame
+                    right_keyframe = self.currentFrame
+                else
+                    for _, keyframe in ipairs(keyframes) do
+                        if keyframe < self.currentFrame and keyframe > left_keyframe then
+                            left_keyframe = keyframe
                         end
                     end
-                    local invertedKeyframes = {}
-                    for i=#keyframes, 1, -1 do
-                        invertedKeyframes[i] = keyframes[i]
-                    end
-        
-                    if #keyframes < 2 then
-                        return
-                    end
-        
-                    if self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(self.currentFrame) .. "_"] ~= nil then
-                        left_keyframe = self.currentFrame
-                        right_keyframe = self.currentFrame
-                    else
-                        for _, keyframe in ipairs(keyframes) do
-                            if keyframe < self.currentFrame and keyframe > left_keyframe then
-                                left_keyframe = keyframe
-                            end
-                        end
-                        for _, keyframe in ipairs(invertedKeyframes) do
-                            if keyframe > self.currentFrame and keyframe < right_keyframe  then
-                                right_keyframe = keyframe
-                            end
+                    for _, keyframe in ipairs(invertedKeyframes) do
+                        if keyframe > self.currentFrame and keyframe < right_keyframe  then
+                            right_keyframe = keyframe
                         end
                     end
-        
-                    local time = 0
-                    if left_keyframe ~= nil and right_keyframe ~= nil and right_keyframe ~= left_keyframe then
-                        time = (self.currentFrame - left_keyframe) / (right_keyframe - left_keyframe)
+                end
+    
+                local time = 0
+                if left_keyframe ~= nil and right_keyframe ~= nil and right_keyframe ~= left_keyframe then
+                    time = (self.currentFrame - left_keyframe) / (right_keyframe - left_keyframe)
+                end
+    
+                if self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation ~= nil and 
+                self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation ~= nil then
+                    local leftrot = Rotation(
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ex"],
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ey"],
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ez"]
+                    )
+                    local rightrot = Rotation(
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ex"],
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ey"],
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ez"]
+                    )
+                    local leftpos = Number3(
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_x"],
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_y"],
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_z"]
+                    )
+                    local rightpos = Number3(
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_x"],
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_y"],
+                        self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_z"]
+                    )
+
+                    local pos = Number3(0, 0, 0)
+                    local rot = Rotation(0, 0, 0)
+
+                    if type(s:GetParent()) == "World" then
+                        pos = s.basePos
+                        rot = s.baseRot
                     end
-        
-                    if self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation ~= nil and 
-                    self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation ~= nil then
-                        local leftrot = Rotation(
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ex"],
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ey"],
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].rotation["_ez"]
-                        )
-                        local rightrot = Rotation(
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ex"],
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ey"],
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].rotation["_ez"]
-                        )
-                        local leftpos = Number3(
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_x"],
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_y"],
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].position["_z"]
-                        )
-                        local rightpos = Number3(
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_x"],
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_y"],
-                            self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(right_keyframe) .. "_"].position["_z"]
-                        )
 
-                        local pos = Number3(0, 0, 0)
-                        local rot = Rotation(0, 0, 0)
+                    --leftpos = 
 
-                        if type(s:GetParent()) == "World" then
-                            pos = s.basePos
-                            rot = s.baseRot
-                        end
-
-                        --leftpos = 
-
-                        s.LocalRotation:Slerp(
-                            leftrot + rot,
-                            rightrot + rot,
-                            nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
-                        )
-                        s.LocalPosition:Lerp(
-                            leftpos + pos,
-                            rightpos + pos,
-                            nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
-                        )
-                    end
+                    s.LocalRotation:Slerp(
+                        leftrot + rot,
+                        rightrot + rot,
+                        nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
+                    )
+                    s.LocalPosition:Lerp(
+                        leftpos + pos,
+                        rightpos + pos,
+                        nanimator.lerp[self.animations[self.currentAnimation].animations[self.animationKey].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
+                    )
                 end
             end)
 
