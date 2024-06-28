@@ -31,6 +31,10 @@ nanimator.add = function(object, name)
         return
     end
     hierarchyActions = require("hierarchyactions")
+    
+    if type(object) == "Player" then
+        object = object.Body
+    end
 
     if object.nanplayer == nil then
         object.nanplayer = Object()
@@ -78,6 +82,10 @@ nanimator.add = function(object, name)
                 error([[self:animate() must be executed with ":"!]], 3)
 
                 return
+            end
+
+            if type(self) == "Player" then
+                self.Animations.Idle:Stop()
             end
 
             hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
