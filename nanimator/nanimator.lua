@@ -262,7 +262,7 @@ nanimator.add = function(object, name)
                 error([[object.getAnimation() should be called with ":"!]])
             end
 
-            return self.nanplayer.currentAnimation
+            return self.nanplayer.animationKey
         end
 
         object.getPlaySpeed = function(self)
