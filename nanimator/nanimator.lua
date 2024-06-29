@@ -163,11 +163,10 @@ nanimator.add = function(object, name)
                     local pos = Number3(0, 0, 0)
                     local rot = Rotation(0, 0, 0)
 
-                    --[[
                     if type(s:GetParent()) == "World" then
                         pos = s.basePos
                         rot = s.baseRot
-                    end]]--
+                    end
 
                     s.LocalRotation:Slerp(
                         leftrot + rot,
