@@ -168,6 +168,11 @@ nanimator.add = function(object, name)
                         rot = s.baseRot
                     end
 
+                    local objParent = self:GetParent():GetParent()
+                    if type(objParent) == "Player" and not objParent.IsLocal then
+                        pos.Y = pos.Y - 6
+                    end
+
                     s.LocalRotation:Slerp(
                         leftrot + rot,
                         rightrot + rot,
