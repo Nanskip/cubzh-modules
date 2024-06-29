@@ -86,10 +86,6 @@ nanimator.add = function(object, name)
                 return
             end
 
-            if type(self) == "Player" then
-                self.Animations.Idle:Stop()
-            end
-
             hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
 
                 if type(s) ~= "Shape" and type(s) ~= "MutableShape" then
@@ -240,6 +236,57 @@ nanimator.add = function(object, name)
             end)
 
             self.nanplayer.playing = true
+        end
+
+        object.setLoop = function(self, bool)
+            if self == nil or type(self) == "boolean" then
+                error([[object.setLoop(boolean) should be called with ":"!]])
+            end
+            if bool == nil or type(bool) ~= "boolean" then
+                error([[object.setLoop(boolean) should receive a boolean value.]])
+            end
+
+            self.nanplayer.loop = bool
+        end
+
+        object.getKeyframe = function(self)
+            if self == nil then
+                error([[object.getKeyframe() should be called with ":"!]])
+            end
+
+            return self.nanplayer.currentFrame
+        end
+
+        object.getAnimation = function(self)
+            if self == nil then
+                error([[object.getAnimation() should be called with ":"!]])
+            end
+
+            return self.nanplayer.currentAnimation
+        end
+
+        object.getPlaySpeed = function(self)
+            if self == nil then
+                error([[object.getPlaySpeed() should be called with ":"!]])
+            end
+
+            return self.nanplayer.playSpeed
+        end
+
+        object.getLoop = function(self)
+            if self == nil then
+                error([[object.getKeyframe() should be called with ":"!]])
+            end
+
+            return self.nanplayer.loop
+        end
+
+        object.setPlaySpeed = function(self, speed)
+            if self == nil or type(self) == "number" or type(self) == "integer" then
+                error([[object.setPlaySpeed(speed) should be called with ":"!]])
+            end
+
+            self.nanplayer.playSpeed = speed
         end
     end
 end
