@@ -169,7 +169,7 @@ nanimator.add = function(object, name)
                     end
 
                     local objParent = self:GetParent():GetParent()
-                    if type(objParent) == "Player" and not objParent.IsLocal and self.Name == "Head" then
+                    if type(objParent) == "Player" and not objParent.IsLocal and s.Name == "Head" then
                         pos.Y = pos.Y - 6
                     end
 
