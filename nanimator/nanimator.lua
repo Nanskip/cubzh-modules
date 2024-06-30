@@ -42,8 +42,6 @@ nanimator.add = function(object, name)
         object.nanplayer = Object()
         object.nanplayer:SetParent(object)
         object.nanplayer.animations = {}
-        object.nanplayer.animations[name] = nanimator.animations[name]
-        object.nanplayer.currentAnimation = name
         object.nanplayer.currentFrame = 0
         object.nanplayer.loop = false
         object.nanplayer.playing = false
@@ -311,6 +309,9 @@ nanimator.add = function(object, name)
             self.nanplayer.playSpeed = speed
         end
     end
+
+    object.nanplayer.animations[name] = nanimator.animations[name]
+    object.nanplayer.currentAnimation = name
 end
 
 nanimator.lerp = {}
