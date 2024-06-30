@@ -59,8 +59,8 @@ nanimator.add = function(object, name)
             if name == nil or name == "(null)" then
                 name = "shape_"
             end
-            s.name = name .. currentId
             currentId = currentId + 1
+            s.name = name .. currentId
         end)
 
         object.nanplayer.Tick = function(self, dt)

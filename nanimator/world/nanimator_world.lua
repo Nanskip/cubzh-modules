@@ -20,6 +20,7 @@ Client.OnStart = function()
     playSpeed = 12
     selectedInterp = "linear"
     loadedModelName = ""
+    setAmbience()
     --Player:SetParent(nil)
 
     startPos = Number3(Map.Width*Map.Scale.X/2, Map.Height*Map.Scale.Y/1.2, Map.Depth*Map.Scale.Z/2)
@@ -1007,6 +1008,7 @@ loadModel = function(model, loading)
         if parent.depth == nil then parent.depth = -1 end
         s.depth = parent.depth + 1
         s.Physics = PhysicsMode.StaticPerBlock
+        s.Shadow = true
 
         s.defaultPosition = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z)
         s.defaultRotation = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
@@ -1170,4 +1172,31 @@ checkforKeyframe = function(time)
     if timeline.animations[selectedAnimation].maxTime < time then
         timeline.animations[selectedAnimation].maxTime = time
     end
+end
+
+setAmbience = function()
+    require("ambience"):set({
+        sky = {
+            skyColor = Color(0,168,255),
+            horizonColor = Color(137,222,229),
+            abyssColor = Color(76,144,255),
+            lightColor = Color(142,180,204),
+            lightIntensity = 0.600000,
+        },
+        fog = {
+            color = Color(19,159,204),
+            near = 300,
+            far = 700,
+            lightAbsorbtion = 0.400000,
+        },
+        sun = {
+            color = Color(255,247,204),
+            intensity = 1.000000,
+            rotation = Number3(1.061161, 3.089219, 0.000000),
+        },
+        ambient = {
+            skyLightFactor = 0.100000,
+            dirLightFactor = 0.200000,
+        }
+    })
 end
