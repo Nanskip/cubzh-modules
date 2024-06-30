@@ -461,23 +461,49 @@ createUI = function()
     end
 
     timeline.leftFrameButton = ui:createButton("⬆", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
-    timeline.leftFrameButton.pos = Number2(Screen.Width - 200-30-38*3, 10+210)
+    timeline.leftFrameButton.pos = Number2(Screen.Width - 200-30-38*5-2, 10+210)
     timeline.leftFrameButton.Rotation.Z = math.pi/2
     timeline.leftFrameButton.onRelease = function()
         timeline.frameOffset = timeline.frameOffset - timeline.stepSize*10
         timeline.update()
+        timeline.updateTime()
         timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
         timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
     end
 
     timeline.rightFrameButton = ui:createButton("⬇", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
-    timeline.rightFrameButton.pos = Number2(Screen.Width - 200-30-38*2, 10+210)
+    timeline.rightFrameButton.pos = Number2(Screen.Width - 200-30-38*4-2, 10+210)
     timeline.rightFrameButton.Rotation.Z = math.pi/2
     timeline.rightFrameButton.onRelease = function()
         timeline.frameOffset = timeline.frameOffset + timeline.stepSize*10
         timeline.update()
+        timeline.updateTime()
         timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
         timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
+    end
+
+    timeline.copyKeyframeButton = ui:createButton("📑", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.copyKeyframeButton.pos = Number2(Screen.Width - 200-30-38*3, 10+210)
+    timeline.copyKeyframeButton.onRelease = function()
+        if selectedObject ~= nil and not playing then
+            if timeline.animations[selectedAnimation].shapes[selectedObject.name].frames[tostring(timeline.indexTime) .. "_"] ~= nil then
+                copiedKeyFrame = JSON:Decode(JSON:Encode(timeline.animations[selectedAnimation].shapes[selectedObject.name].frames[tostring(timeline.indexTime) .. "_"]))
+
+                timeline.update()
+                timeline.updateTime()
+            end
+        end
+    end
+
+    timeline.pasteKeyframeButton = ui:createButton("📋", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.pasteKeyframeButton.pos = Number2(Screen.Width - 200-30-38*4, 10+210)
+    timeline.pasteKeyframeButton.onRelease = function()
+        if copiedKeyFrame ~= nil and not playing then
+            timeline.animations[selectedAnimation].shapes[selectedObject.name].frames[tostring(timeline.indexTime) .. "_"] = JSON:Decode(JSON:Encode(copiedKeyFrame))
+            
+            timeline.update()
+            timeline.updateTime()
+        end
     end
 
     timeline.playButton = ui:createButton("▶️", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
