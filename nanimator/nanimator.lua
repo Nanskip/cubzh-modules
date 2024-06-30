@@ -247,6 +247,19 @@ nanimator.add = function(object, name)
             end
         end
 
+        object.nanStop = function(self)
+            if self == nil then
+                error([[self:nanStop() must be executed with ":"!]], 3)
+
+                return
+            end
+
+            if self.nanplayer.playing then
+                self.nanplayer.loop = false
+                self.nanplayer.currentFrame = self.nanplayer.animations[self.nanplayer.currentAnimation].animations[self.nanplayer.animationKey].maxTime
+            end
+        end
+
         object.setLoop = function(self, bool)
             if self == nil or type(self) == "boolean" then
                 error([[object.setLoop(boolean) should be called with ":"!]])
