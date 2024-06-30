@@ -59,10 +59,10 @@ nanimator.add = function(object, name)
                 return
             end
             if name == nil or name == "(null)" then
-                name = "shape_" .. currentId
-                currentId = currentId + 1
+                name = "shape_"
             end
-            s.name = name
+            s.name = name .. currentId
+            currentId = currentId + 1
         end)
 
         object.nanplayer.Tick = function(self, dt)
@@ -219,30 +219,32 @@ nanimator.add = function(object, name)
 
                 return
             end
-            if name ~= nil then
-                self.nanplayer.animations[name] = nanimator.animations[name]
-            end
-            if name == nil then
-                name = self.nanplayer.currentAnimation
-            end
-            if anim ~= nil then
-                self.nanplayer.animationKey = anim
-            end
-            if self.nanplayer.animationKey == nil then
-                self.nanplayer.animationKey = "default"
-            end
-            if self.nanplayer.animations[name] == nil then
-                error("Animation not found: ".. name, 3)
-        
-                return
-            end
+            if not self.nanplayer.playing then
+                if name ~= nil then
+                    self.nanplayer.animations[name] = nanimator.animations[name]
+                end
+                if name == nil then
+                    name = self.nanplayer.currentAnimation
+                end
+                if anim ~= nil then
+                    self.nanplayer.animationKey = anim
+                end
+                if self.nanplayer.animationKey == nil then
+                    self.nanplayer.animationKey = "default"
+                end
+                if self.nanplayer.animations[name] == nil then
+                    error("Animation not found: ".. name, 3)
+            
+                    return
+                end
 
-            hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
-                s.baseRot = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
-                s.basePos = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z)
-            end)
+                hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
+                    s.baseRot = Rotation(s.LocalRotation.X, s.LocalRotation.Y, s.LocalRotation.Z)
+                    s.basePos = Number3(s.LocalPosition.X, s.LocalPosition.Y, s.LocalPosition.Z)
+                end)
 
-            self.nanplayer.playing = true
+                self.nanplayer.playing = true
+            end
         end
 
         object.setLoop = function(self, bool)

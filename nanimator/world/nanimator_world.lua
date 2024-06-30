@@ -1042,11 +1042,11 @@ loadModel = function(model, loading)
     for k, v in ipairs(timeline.shapes) do
         local name = v.Name
         if name == nil then
-            name = ("shape_" .. timeline.currentId)
-            timeline.currentId = timeline.currentId + 1
+            name = ("shape_")
         end
-        v.name = name
-        timeline.buttons[k] = ui:createButton(name .." [#" .. #timeline.buttons .. "]", {borders = false, color = Color(0.2, 0.2, 0.2, 0.3), colorPressed = Color(0.3, 0.3, 0.3, 0.3), shadow = false})
+        timeline.currentId = timeline.currentId + 1
+        v.name = name .. timeline.currentId
+        timeline.buttons[k] = ui:createButton(name .. timeline.currentId .. " [#" .. #timeline.buttons .. "]", {borders = false, color = Color(0.2, 0.2, 0.2, 0.3), colorPressed = Color(0.3, 0.3, 0.3, 0.3), shadow = false})
         timeline.buttons[k].pos = Number2(15, 15 + ((timeline.buttons[k].Height + 5))*(k-1))
 
         if v.depth == nil then v.depth = 0 end
