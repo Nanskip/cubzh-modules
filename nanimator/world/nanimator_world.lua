@@ -70,15 +70,26 @@ Client.Tick = function(dt)
             timeline.frameOffset = timeline.frameOffset + timeline.stepSize*10
             timeline.update()
         end
-        if timeline.indexTime > timeline.maxTime then
-            timeline.indexTime = timeline.savedindexTime
-            timeline.offsetTime = timeline.savedoffsetTime 
-            timeline.updateObjects()
-            timeline.update()
-            playing = false
-            timeline.playButton.Text = "▶️"
-            timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
-            timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
+        if not loopEnabled then
+            if timeline.indexTime > timeline.maxTime then
+                timeline.indexTime = timeline.savedindexTime
+                timeline.offsetTime = timeline.savedoffsetTime 
+                timeline.updateObjects()
+                timeline.update()
+                playing = false
+                timeline.playButton.Text = "▶️"
+                timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
+                timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
+            end
+        else
+            if timeline.indexTime > timeline.animations[selectedAnimation].loopEnd then
+                timeline.indexTime = timeline.animations[selectedAnimation].loopStart
+                timeline.offsetTime = timeline.savedoffsetTime 
+                timeline.updateObjects()
+                timeline.update()
+                timeline.cursorLine.pos.X = ((timeline.indexTime)*timeline.stepSize + 270 ) - timeline.frameOffset
+                timeline.cursor.pos.X = (timeline.indexTime)*timeline.stepSize + 267 - timeline.frameOffset
+            end
         end
     end
 
@@ -342,6 +353,10 @@ createUI = function()
         timeline.maxTime = timeline.animations[selectedAnimation].maxTime
         if timeline.maxTime == nil then timeline.maxTime = 0 end
         timeline.time.Text = "Time: " .. string.format("%.0f", timeline.indexTime) .. "/" .. timeline.maxTime
+
+        if not timeline.editEndTime.disabled then
+            timeline.editEndTime.pos = Number2(timeline.time.pos.X + timeline.time.Width + 2, timeline.time.pos.Y-1)
+        end
     end
 
     timeline.background.onDrag = function(self, pe)
@@ -576,6 +591,54 @@ createUI = function()
         if playSpeed > 6000 then
             playSpeed = 6000
         end
+    end
+
+    timeline.loopButton = ui:createButton("Loop", {borders = false, shadow = false, color = Color(200, 40, 40, 0.6), colorPressed = Color(150, 30, 30, 0.6)})
+    timeline.loopButton.pos = Number2(Screen.Width - 220 + 38 + 10 + 78, 20+38+5)
+    timeline.loopButton.Width = 74
+    timeline.loopButton.onRelease = function()
+        if loopEnabled then
+            timeline.loopButton:setColor(Color(200, 40, 40, 0.6))
+            timeline.loopButton:setColorPressed(Color(150, 30, 30, 0.6))
+            loopEnabled = false
+        else
+            timeline.loopButton:setColor(Color(40, 200, 40, 0.6))
+            timeline.loopButton:setColorPressed(Color(30, 150, 30, 0.6))
+            loopEnabled = true
+        end
+    end
+
+    timeline.editEndTimeInput = ui:createTextInput(timeline.animations[selectedAnimation].maxTime, "End of animation.")
+    timeline.editEndTimeInput.Size = Number2(205-36, 36)
+    timeline.editEndTimeInput.pos = Number2(-1000, -1000)
+
+    timeline.editEndTimeInputConfirm = ui:createButton("✅", {borders = false, shadow = false})
+    timeline.editEndTimeInputConfirm.pos = Number2(-1000, -1000)
+    timeline.editEndTimeInputConfirm.onRelease = function()
+        if timeline.animations[selectedAnimation].maxTime ~= nil then
+            if tonumber(timeline.editEndTimeInput.Text) then
+                timeline.maxTime = tonumber(timeline.editEndTimeInput.Text)
+                timeline.animations[selectedAnimation].maxTime = timeline.maxTime
+            end
+        end
+        timeline.update()
+        timeline.updateTime()
+
+        timeline.editEndTimeInput.pos = Number2(-1000, -1000)
+        timeline.editEndTimeInputConfirm.pos = Number2(-1000, -1000)
+        timeline.editEndTime.disabled = false
+
+        timeline.editEndTime.pos = Number2(timeline.time.pos.X + timeline.time.Width + 2, timeline.time.pos.Y-1)
+    end
+
+    timeline.editEndTime = ui:createButton("✏️", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.editEndTime.pos = Number2(timeline.time.pos.X + timeline.time.Width + 2, timeline.time.pos.Y-1)
+    timeline.editEndTime.object.Scale = Number3(0.63, 0.63, 0.63)
+    timeline.editEndTime.onRelease = function()
+        timeline.editEndTimeInput.pos = Number2(timeline.time.pos.X, timeline.time.pos.Y-8)
+        timeline.editEndTimeInputConfirm.pos = Number2(timeline.editEndTimeInput.pos.X + timeline.editEndTimeInput.Width, timeline.editEndTimeInput.pos.Y)
+        timeline.editEndTime.pos = Number2(-1000, -1000)
+        timeline.editEndTime.disabled = true
     end
 
     timeline.buttonsBackground = ui:createFrame(Color(0, 0, 0, 0.4))

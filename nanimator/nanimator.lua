@@ -61,6 +61,8 @@ nanimator.add = function(object, name)
             end
             currentId = currentId + 1
             s.name = name .. currentId
+
+            s.resetAnimation = true
         end)
 
         object.nanplayer.Tick = function(self, dt)
@@ -192,11 +194,13 @@ nanimator.add = function(object, name)
                 if self.currentFrame > self.animations[self.currentAnimation].animations[self.animationKey].maxTime then
                     self.currentFrame = 0
                     hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
-                        if s.basePos ~= nil then
-                            s.LocalPosition = s.basePos
-                        end
-                        if s.baseRot ~= nil then
-                            s.LocalRotation = s.baseRot
+                        if s.resetAnimation then
+                            if s.basePos ~= nil then
+                                s.LocalPosition = s.basePos
+                            end
+                            if s.baseRot ~= nil then
+                                s.LocalRotation = s.baseRot
+                            end
                         end
                     end)
                     self.currentFrame = 0
