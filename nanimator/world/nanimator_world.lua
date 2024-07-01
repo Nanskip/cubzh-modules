@@ -1128,12 +1128,14 @@ loadModel = function(model, loading)
             end
 
             timeline.update()
+            timeline.updateTime()
         end
 
         s.removeKeyframe = function(self, time)
             timeline.animations[selectedAnimation].shapes[self.name].frames[tostring(time) .. "_"] = nil
 
             timeline.update()
+            timeline.updateTime()
         end
     end)
 
