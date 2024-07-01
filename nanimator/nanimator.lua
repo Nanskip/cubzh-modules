@@ -188,14 +188,33 @@ nanimator.add = function(object, name)
             local frame = (delta*(self.animations[self.currentAnimation].animations[self.animationKey].playSpeed * self.playSpeed or 12))/62.5
 
             self.currentFrame = self.currentFrame + frame
-            if self.currentFrame > self.animations[self.currentAnimation].animations[self.animationKey].maxTime then
-                self.currentFrame = 0
-                hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
-                    s.LocalPosition = s.basePos
-                    s.LocalRotation = s.baseRot
-                end)
-                if not self.loop then
+            if not self.loop then
+                if self.currentFrame > self.animations[self.currentAnimation].animations[self.animationKey].maxTime then
+                    self.currentFrame = 0
+                    hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
+                        s.LocalPosition = s.basePos
+                        s.LocalRotation = s.baseRot
+                    end)
+                    self.currentFrame = 0
                     self.playing = false
+                end
+            else
+                if self.animations[self.currentAnimation].animations[self.animationKey].loopEnd ~= nil then
+                    if self.currentFrame > self.animations[self.currentAnimation].animations[self.animationKey].loopEnd then
+                        if self.animations[self.currentAnimation].animations[self.animationKey].loopStart ~= nil then
+                            self.currentFrame = self.animations[self.currentAnimation].animations[self.animationKey].loopStart
+                        else
+                            self.currentFrame = 0
+                        end
+                    end
+                else
+                    if self.currentFrame > self.animations[self.currentAnimation].animations[self.animationKey].maxTime then
+                        if self.animations[self.currentAnimation].animations[self.animationKey].loopStart ~= nil then
+                            self.currentFrame = self.animations[self.currentAnimation].animations[self.animationKey].loopStart
+                        else
+                            self.currentFrame = 0
+                        end
+                    end
                 end
             end
         end
@@ -245,6 +264,10 @@ nanimator.add = function(object, name)
             end
         end
 
+        object.playAnimation = function(self, name, anim)
+            self:nanPlay(name, anim)
+        end
+
         object.nanStop = function(self)
             if self == nil then
                 error([[self:nanStop() must be executed with ":"!]], 3)
@@ -256,6 +279,10 @@ nanimator.add = function(object, name)
                 self.nanplayer.loop = false
                 self.nanplayer.currentFrame = self.nanplayer.animations[self.nanplayer.currentAnimation].animations[self.nanplayer.animationKey].maxTime
             end
+        end
+
+        object.stopAnimation = function(self)
+            self:nanStop()
         end
 
         object.setLoop = function(self, bool)

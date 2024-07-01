@@ -444,6 +444,46 @@ createUI = function()
         selectedObject.LocalPosition = selectedObject.defaultPosition
     end
 
+    timeline.loopStartButton = ui:createButton("📤", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.loopStartButton.pos = Number2(Screen.Width - 200-30+3, 10+210+38)
+    timeline.loopStartButton.Rotation.Z = -math.pi/2
+    timeline.loopStartButton.onRelease = function()
+        if timeline.animations[selectedAnimation].loopEnd == nil then
+            timeline.animations[selectedAnimation].loopEnd = 0
+        end
+        if timeline.indexTime < timeline.animations[selectedAnimation].loopEnd then
+            timeline.animations[selectedAnimation].loopStart = timeline.indexTime
+        end
+        
+        timeline.update()
+        timeline.updateTime()
+    end
+
+    timeline.loopEndButton = ui:createButton("📤", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.loopEndButton.pos = Number2(Screen.Width - 200-30+3+38*2, 10+210)
+    timeline.loopEndButton.Rotation.Z = math.pi/2
+    timeline.loopEndButton.onRelease = function()
+        if timeline.animations[selectedAnimation].loopStart == nil then
+            timeline.animations[selectedAnimation].loopStart = 0
+        end
+        if timeline.indexTime > timeline.animations[selectedAnimation].loopStart then
+            timeline.animations[selectedAnimation].loopEnd = timeline.indexTime
+        end
+
+        timeline.update()
+        timeline.updateTime()
+    end
+
+    timeline.loopStartLine = ui:createFrame(Color(255, 255, 0, 0.5))
+    timeline.loopEndLine = ui:createFrame(Color(255, 255, 0, 0.5))
+
+    timeline.loopStartText = ui:createText("^", Color(255, 255, 0, 0.5))
+    timeline.loopStartText.object.Scale = 1.5
+    timeline.loopStartText.Rotation.Z = math.pi
+    timeline.loopEndText = ui:createText("^", Color(255, 255, 0, 0.5))
+    timeline.loopEndText.object.Scale = 1.5
+    timeline.loopEndText.Rotation.Z = math.pi
+
     timeline.addKeyframeButton = ui:createButton("➕", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
     timeline.addKeyframeButton.pos = Number2(Screen.Width - 200-30-38, 10+210)
     timeline.addKeyframeButton.onRelease = function()
@@ -564,6 +604,8 @@ createUI = function()
         timeline.lerpButtons[i].Width = 200
         timeline.lerpButtons[i].onRelease = function()
             timeline.lerpChangeButton:enable()
+            timeline.loopStartButton.pos = Number2(Screen.Width - 200-30+3, 10+210+38)
+            timeline.loopEndButton.pos = Number2(Screen.Width - 200-30+3+38*2, 10+210)
             selectedInterp = timeline.lerpTypes[i]
             timeline.lerpText.Text = "Interpolation: \n" .. selectedInterp
             for i=1, #timeline.lerpTypes do
@@ -584,6 +626,8 @@ createUI = function()
             timeline.lerpButtons[i].Width = 200
         end
         timeline.lerpChangeButton:disable()
+        timeline.loopStartButton.pos = Number2(-1000, -1000)
+        timeline.loopEndButton.pos = Number2(-1000, -1000)
     end
 
     timeline.update = function()
@@ -603,6 +647,28 @@ createUI = function()
             for key, value in pairs(timeline.keyframes[k]) do
                 timeline.keyframes[k][key]:remove()
                 timeline.keyframes[k][key] = nil
+            end
+        end
+
+        if timeline.animations[selectedAnimation].loopStart ~= nil then
+            if timeline.animations[selectedAnimation].loopStart >= timeline.frameOffset/20 and timeline.animations[selectedAnimation].loopStart < timeline.frameOffset/20 + 69  then
+                timeline.loopStartLine.size = Number2(3, 210)
+                timeline.loopStartLine.pos = Number2(266+5 + (timeline.animations[selectedAnimation].loopStart-timeline.frameOffset/20)*timeline.stepSize, 10)
+                timeline.loopStartText.pos = Number2(timeline.loopStartLine.pos.X+9, timeline.loopStartLine.pos.Y + 210+27)
+            else
+                timeline.loopStartLine.pos = Number2(-1000, -1000)
+                timeline.loopStartText.pos = Number2(-1000, -1000)
+            end
+        end
+
+        if timeline.animations[selectedAnimation].loopEnd ~= nil then
+            if timeline.animations[selectedAnimation].loopEnd >= timeline.frameOffset/20 and timeline.animations[selectedAnimation].loopEnd < timeline.frameOffset/20 + 69 then
+                timeline.loopEndLine.size = Number2(3, 210)
+                timeline.loopEndLine.pos = Number2(266+5 + (timeline.animations[selectedAnimation].loopEnd-timeline.frameOffset/20)*timeline.stepSize, 10)
+                timeline.loopEndText.pos = Number2(timeline.loopEndLine.pos.X+9, timeline.loopEndLine.pos.Y + 210+27)
+            else
+                timeline.loopEndLine.pos = Number2(-1000, -1000)
+                timeline.loopEndText.pos = Number2(-1000, -1000)
             end
         end
 
@@ -867,7 +933,9 @@ createUI = function()
             timeline.animations[selectedAnimation] = {
                 shapes = {},
                 maxTime = 0,
-                playSpeed = 12
+                playSpeed = 12,
+                loopStart = 0,
+                loopEnd = 0,
             }
             
             hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
@@ -1005,6 +1073,8 @@ loadModel = function(model, loading)
         timeline.animations["default"] = {
             shapes = {},
             maxTime = 0,
+            loopStart = 0,
+            loopEnd = 0,
         }
     end
 
