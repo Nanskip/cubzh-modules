@@ -202,7 +202,7 @@ nanimator.add = function(object, name)
                 if self.animations[self.currentAnimation].animations[self.animationKey].loopEnd ~= nil then
                     if self.currentFrame > self.animations[self.currentAnimation].animations[self.animationKey].loopEnd then
                         if self.animations[self.currentAnimation].animations[self.animationKey].loopStart ~= nil then
-                            self.currentFrame = self.currentFrame - (self.animations[self.currentAnimation].animations[self.animationKey].loopEnd-self.animations[self.currentAnimation].animations[self.animationKey].loopStart)
+                            self.currentFrame = self.currentFrame - (self.animations[self.currentAnimation].animations[self.animationKey].loopEnd-self.animations[self.currentAnimation].animations[self.animationKey].loopStart) + frame
                         else
                             self.currentFrame = 0
                         end
@@ -210,7 +210,7 @@ nanimator.add = function(object, name)
                 else
                     if self.currentFrame > self.animations[self.currentAnimation].animations[self.animationKey].maxTime then
                         if self.animations[self.currentAnimation].animations[self.animationKey].loopStart ~= nil then
-                            self.currentFrame = self.currentFrame - (self.animations[self.currentAnimation].animations[self.animationKey].loopEnd-self.animations[self.currentAnimation].animations[self.animationKey].loopStart)
+                            self.currentFrame = self.currentFrame - (self.animations[self.currentAnimation].animations[self.animationKey].loopEnd-self.animations[self.currentAnimation].animations[self.animationKey].loopStart) + frame
                         else
                             self.currentFrame = 0
                         end
