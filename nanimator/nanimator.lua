@@ -192,7 +192,6 @@ nanimator.add = function(object, name)
             self.currentFrame = self.currentFrame + frame
             if not self.loop then
                 if self.currentFrame > self.animations[self.currentAnimation].animations[self.animationKey].maxTime then
-                    self.currentFrame = 0
                     hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
                         if s.resetAnimation then
                             if s.basePos ~= nil then
@@ -228,7 +227,6 @@ nanimator.add = function(object, name)
         end
 
         object.nanplayer.remove = function(self)
-            print("removed")
             local parent = self:GetParent().nanplayer
             parent.animations = nil
             parent.currentAnimation = nil
@@ -311,13 +309,56 @@ nanimator.add = function(object, name)
 
             return self.nanplayer.currentFrame
         end
+        
+        object.setKeyframe = function(self, number)
+            if self == nil then
+                error([[object.setKeyframe() should be called with ":"!]])
+            end
+            if number == nil then
+                error([[object.setKeyframe(number) should receive a number value.]])
+            end
+
+            self.nanplayer.currentFrame = number
+        end
 
         object.getAnimation = function(self)
             if self == nil then
                 error([[object.getAnimation() should be called with ":"!]])
             end
 
+            return self.nanplayer.currentAnimation
+        end
+
+        object.setAnimation = function(self, name)
+            if self == nil then
+                error([[object.setAnimation(name) should be called with ":"!]])
+            end
+
+            if nanimator.animations[name] == nil then
+                error([[object.setAnimation(name) should contain saved animation name!]])
+            end
+
+            self.nanplayer.currentAnimation = nanimator.animations[name]
+        end
+
+        object.getAnimationKey = function(self)
+            if self == nil then
+                error([[object.getAnimationKey() should be called with ":"!]])
+            end
+
             return self.nanplayer.animationKey
+        end
+
+        object.setAnimationKey = function(self, name)
+            if self == nil then
+                error([[object.setAnimation(name) should be called with ":"!]])
+            end
+
+            if self.nanplayer.animations[name] == nil then
+                error([[object.setAnimationKey(name) should contain saved animation sequence name!]])
+            end
+
+            self.nanplayer.animationKey = name
         end
 
         object.getPlaySpeed = function(self)

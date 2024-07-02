@@ -926,6 +926,29 @@ createUI = function()
         local index = 1
 
         for k, v in pairs(timeline.animations) do
+            timeline.animationSelector.buttons[k] = ui:createButton(k, {
+                color = Color(0, 0, 0, 0.6), colorPressed = Color(30, 30, 30, 0.6),
+                borders = false, shadow = false
+            })
+            timeline.animationSelector.buttons[k].Height = 36
+            timeline.animationSelector.buttons[k].Width = 250
+            timeline.animationSelector.buttons[k].animation = k
+
+            timeline.animationSelector.buttons[k].onRelease = function(self)
+                selectedAnimation = self.animation
+                timeline.indexTime = 0
+                timeline.offsetTime = 0
+                timeline.cursorLine.pos.X = 268
+                timeline.cursor.pos.X = 267
+
+                timeline.update()
+                timeline.updateTime()
+                timeline.updateAnimations()
+                timeline.updateObjects()
+            end
+        end
+
+        for k, v in pairs(timeline.animations) do
             if index - timeline.animationSelector.moveIndex > 0 and index < timeline.animationSelector.moveIndex + 6 then
                 timeline.animationSelector.buttons[k].pos = Number2(15, 416 - (index - timeline.animationSelector.moveIndex) * 36)
             end
@@ -1002,9 +1025,11 @@ createUI = function()
             }
             
             hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
-                timeline.animations[selectedAnimation].shapes[s.name] = {
-                    frames = {}
-                }
+                if s.name ~= nil then
+                    timeline.animations[selectedAnimation].shapes[s.name] = {
+                        frames = {}
+                    }
+                end
             end)
 
             timeline.update()
