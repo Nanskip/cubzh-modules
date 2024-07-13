@@ -111,15 +111,18 @@ Pointer.Down = function( pointerEvent )
     local impact = pointerEvent:CastRay()
     if impact.Object == nil then
         gizmo:setObject(nil)
+        timeline.update()
         return
     elseif impact.Object == Map then
         gizmo:setObject(nil)
+        timeline.update()
         return
     elseif type(impact.Object) ~= "Shape" and type(impact.Object) ~= "MutableShape" then
         return
     else
         selectedObject = impact.Object
         gizmo:setObject(selectedObject)
+        timeline.update()
     end
 end
 
@@ -674,6 +677,7 @@ createUI = function()
             for i=1, #timeline.lerpTypes do
                 timeline.lerpButtons[i].pos = Number2(-1000, -1000)
             end
+            timeline.update()
         end
     end
 
@@ -691,7 +695,14 @@ createUI = function()
         timeline.lerpChangeButton:disable()
         timeline.loopStartButton.pos = Number2(-1000, -1000)
         timeline.loopEndButton.pos = Number2(-1000, -1000)
+        timeline.update()
     end
+
+    timeline.propertiesButton = ui:createButton("Properties", {borders = false, shadow = false, color = Color(46, 46, 46, 0.6), colorPressed = Color(26, 26, 26, 0.6)})
+    timeline.propertiesButton.Height = 38
+    timeline.propertiesButton.Width = 220-3
+    --timeline.propertiesButton.pos = Number2(Screen.Width - 230+3, 10 + 250)
+    timeline.propertiesButton.pos = Number2(-1000, -1000)
 
     timeline.update = function()
         if timeline.frameOffset < 0 then
@@ -793,6 +804,12 @@ createUI = function()
                     timeline.keyframes[val][k] = nil
                 end
             end
+        end
+
+        if gizmo.object ~= nil and timeline.lerpButtons[1].pos == Number3(-1000, -1000, -5.4) then
+            timeline.propertiesButton.pos = Number2(Screen.Width - 230+3, 10 + 250)
+        else
+            timeline.propertiesButton.pos = Number2(-1000, -1000)
         end
     end
 
