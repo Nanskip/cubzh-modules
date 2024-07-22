@@ -70,6 +70,16 @@ joysticks.create = function(config)
         return
     end
 
+    joystick.setPos = function(self, pos)
+        if self.stick == nil then
+            error("joystick.setPos() should be called with ':'!")
+        end
+
+        joystick.shape.pos = pos
+        joystick.stick.pos.X = pos.X + 48 * joystick.config.scale
+        joystick.stick.pos.Y = pos.Y + 48 * joystick.config.scale
+    end
+
     joystick.getValues = function(self)
         if self == nil then
             error("joystick.getValues() must be called with ':'!", 3)
