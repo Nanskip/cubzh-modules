@@ -71,7 +71,7 @@ joysticks.create = function(config)
     end
 
     joystick.setPos = function(self, pos)
-        if self.stick == nil then
+        if self == "Number2" then
             error("joystick.setPos() should be called with ':'!")
         end
 
