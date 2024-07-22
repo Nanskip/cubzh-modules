@@ -75,9 +75,24 @@ joysticks.create = function(config)
             error("joystick.setPos() should be called with ':'!")
         end
 
-        joystick.shape.pos = pos
-        joystick.stick.pos.X = pos.X + 48 * joystick.config.scale
-        joystick.stick.pos.Y = pos.Y + 48 * joystick.config.scale
+        self.shape.pos = pos
+        self.stick.pos.X = pos.X + 48 * self.config.scale
+        self.stick.pos.Y = pos.Y + 48 * self.config.scale
+    end
+
+    joystick.setScale = function(self, scale)
+        if self == "number" or self == "integer" then
+            error("joystick.setScale(scale) should be called with ':'!")
+        end
+
+        self.config.scale = scale
+        self.shape.Width = 160*self.config.scale
+        self.shape.Height = 160*self.config.scale
+        self.stick.Width = 64*self.config.scale
+        self.stick.Height = 64*self.config.scale
+        self.shape.pos = pos
+        self.stick.pos.X = pos.X + 48 * self.config.scale
+        self.stick.pos.Y = pos.Y + 48 * self.config.scale
     end
 
     joystick.getValues = function(self)
