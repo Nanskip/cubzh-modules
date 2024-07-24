@@ -164,11 +164,12 @@ joysticks.create = function(config)
 
         local index = payload.Index
 
-        local posX = payload.X * Screen.Width
-        local posY = payload.Y * Screen.Height
-        local centerX = ((320*self.config.scale)/4)+self.shape.pos.X - (32*self.config.scale)
-        local centerY = ((320*self.config.scale)/4)+self.shape.pos.Y - (32*self.config.scale)
-
+        if payload.X ~= nil and payload.X ~= nil then
+            local posX = payload.X * Screen.Width
+            local posY = payload.Y * Screen.Height
+            local centerX = ((320*self.config.scale)/4)+self.shape.pos.X - (32*self.config.scale)
+            local centerY = ((320*self.config.scale)/4)+self.shape.pos.Y - (32*self.config.scale)
+        end
         
         if self.dist(Number2(posX, posY), self.stick.fakepos) < 4  and payload.Index == self.index then
             self.dragging = false
