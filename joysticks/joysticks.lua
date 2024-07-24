@@ -164,7 +164,7 @@ joysticks.create = function(config)
 
         local index = payload.Index
 
-        if payload.X ~= nil and payload.X ~= nil then
+        if payload.X ~= nil and payload.Y ~= nil then
             local posX = payload.X * Screen.Width
             local posY = payload.Y * Screen.Height
             local centerX = ((320*self.config.scale)/4)+self.shape.pos.X - (32*self.config.scale)
@@ -194,8 +194,10 @@ joysticks.create = function(config)
 
         local index = payload.Index
         
-        local posX = payload.X * Screen.Width
-        local posY = payload.Y * Screen.Height
+        if payload.X ~= nil and payload.Y ~= nil then
+            local posX = payload.X * Screen.Width
+            local posY = payload.Y * Screen.Height
+        end
         local centerX = ((320*self.config.scale)/4)+self.shape.pos.X
         local centerY = ((320*self.config.scale)/4)+self.shape.pos.Y
 
@@ -222,8 +224,10 @@ joysticks.create = function(config)
         local index = payload.Index
 
         if self.dragging and payload.Index == self.index then
-            local posX = payload.X * Screen.Width
-            local posY = payload.Y * Screen.Height
+            if payload.X ~= nil and payload.Y ~= nil then
+                local posX = payload.X * Screen.Width
+                local posY = payload.Y * Screen.Height
+            end
             local centerX = ((192*self.config.scale)/4)+self.shape.pos.X
             local centerY = ((192*self.config.scale)/4)+self.shape.pos.Y
             local radius = 80*self.config.scale
