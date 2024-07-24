@@ -167,20 +167,22 @@ joysticks.create = function(config)
         if payload.X ~= nil and payload.Y ~= nil then
             local posX = payload.X * Screen.Width
             local posY = payload.Y * Screen.Height
+        end
+        if self.shape ~= nil then
             local centerX = ((320*self.config.scale)/4)+self.shape.pos.X - (32*self.config.scale)
             local centerY = ((320*self.config.scale)/4)+self.shape.pos.Y - (32*self.config.scale)
-        end
-        
-        if self.dist(Number2(posX, posY), self.stick.fakepos) < 4  and payload.Index == self.index then
-            self.dragging = false
             
-            self.x = 0
-            self.y = 0
+            if self.dist(Number2(posX, posY), self.stick.fakepos) < 4  and payload.Index == self.index then
+                self.dragging = false
+                
+                self.x = 0
+                self.y = 0
 
-            self.stick.pos = Number2(centerX, centerY)
+                self.stick.pos = Number2(centerX, centerY)
 
-            if self.onRelease ~= nil and type(self.onRelease) == "function" then
-                self.onRelease()
+                if self.onRelease ~= nil and type(self.onRelease) == "function" then
+                    self.onRelease()
+                end
             end
         end
     end
@@ -198,19 +200,21 @@ joysticks.create = function(config)
             local posX = payload.X * Screen.Width
             local posY = payload.Y * Screen.Height
         end
-        local centerX = ((320*self.config.scale)/4)+self.shape.pos.X
-        local centerY = ((320*self.config.scale)/4)+self.shape.pos.Y
+        if self.shape ~= nil then
+            local centerX = ((320*self.config.scale)/4)+self.shape.pos.X
+            local centerY = ((320*self.config.scale)/4)+self.shape.pos.Y
 
-        self.stick.fakepos = Number2(posX, posY)
+            self.stick.fakepos = Number2(posX, posY)
 
-        if self.dist(Number2(posX, posY), Number2(centerX, centerY)) < 80*self.config.scale then
-            self.dragging = true
-            self.index = index
+            if self.dist(Number2(posX, posY), Number2(centerX, centerY)) < 80*self.config.scale then
+                self.dragging = true
+                self.index = index
 
-            self:gotDrag(payload)
+                self:gotDrag(payload)
 
-            if self.onPress ~= nil and type(self.onPress) == "function" then
-                self.onPress()
+                if self.onPress ~= nil and type(self.onPress) == "function" then
+                    self.onPress()
+                end
             end
         end
     end
@@ -228,29 +232,31 @@ joysticks.create = function(config)
                 local posX = payload.X * Screen.Width
                 local posY = payload.Y * Screen.Height
             end
-            local centerX = ((192*self.config.scale)/4)+self.shape.pos.X
-            local centerY = ((192*self.config.scale)/4)+self.shape.pos.Y
-            local radius = 80*self.config.scale
-        
-            local offsetX = posX - centerX - (32*self.config.scale)
-            local offsetY = posY - centerY - (32*self.config.scale)
-        
-            local distance = math.sqrt(offsetX * offsetX + offsetY * offsetY)
-            self.stick.fakepos = Number2(posX, posY)
-        
-            if distance > radius then
-                local scale = radius / distance
-                offsetX = offsetX * scale
-                offsetY = offsetY * scale
-            end
+            if self.shape ~= nil then
+                local centerX = ((192*self.config.scale)/4)+self.shape.pos.X
+                local centerY = ((192*self.config.scale)/4)+self.shape.pos.Y
+                local radius = 80*self.config.scale
+            
+                local offsetX = posX - centerX - (32*self.config.scale)
+                local offsetY = posY - centerY - (32*self.config.scale)
+            
+                local distance = math.sqrt(offsetX * offsetX + offsetY * offsetY)
+                self.stick.fakepos = Number2(posX, posY)
+            
+                if distance > radius then
+                    local scale = radius / distance
+                    offsetX = offsetX * scale
+                    offsetY = offsetY * scale
+                end
 
-            self.x = ((offsetX + (32*self.config.scale))/(160*self.config.scale)-0.2)*2
-            self.y = ((offsetY + (32*self.config.scale))/(160*self.config.scale)-0.2)*2
+                self.x = ((offsetX + (32*self.config.scale))/(160*self.config.scale)-0.2)*2
+                self.y = ((offsetY + (32*self.config.scale))/(160*self.config.scale)-0.2)*2
 
-            self.stick.pos = Number2(centerX + offsetX, centerY + offsetY)
+                self.stick.pos = Number2(centerX + offsetX, centerY + offsetY)
 
-            if self.onDrag ~= nil and type(self.onDrag) == "function" then
-                self.onDrag()
+                if self.onDrag ~= nil and type(self.onDrag) == "function" then
+                    self.onDrag()
+                end
             end
         end
     end
