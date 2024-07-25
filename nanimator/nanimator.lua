@@ -38,7 +38,7 @@ nanimator.add = function(object, name)
 
         print("⚠️ nanimator.add(): can't add animation to a Player object. Animation added to a Player.Body")
     end
-    if object:GetChild(1) ~= nil and type(object:GetChild(1)) == "MutableShape" then
+    if object.Name == "Body" then
         isplayer = true
     end
 
@@ -74,14 +74,14 @@ nanimator.add = function(object, name)
             object.Head.name = "Head2"
             object.Head.EyeLidRight.name = "EyeLidRight3"
             object.Head.EyeLidLeft.name = "EyeLidRight4"
-            object.Body.RightLeg.name = "RightLeg5"
-            object.Body.RightLeg.RightFoot.name = "RightFoot6"
-            object.Body.LeftLeg.name = "LeftLeg7"
-            object.Body.LeftLeg.LeftFoot.name = "LeftFoot6"
-            object.Body.RightArm.name = "RightArm9"
-            object.Body.RightArm.RightHand.name = "RightHand10"
-            object.Body.LeftArm.name = "LeftArm11"
-            object.Body.LeftArm.RightHand.name = "RightHand12"
+            object.RightLeg.name = "RightLeg5"
+            object.RightLeg.RightFoot.name = "RightFoot6"
+            object.LeftLeg.name = "LeftLeg7"
+            object.LeftLeg.LeftFoot.name = "LeftFoot6"
+            object.RightArm.name = "RightArm9"
+            object.RightArm.RightHand.name = "RightHand10"
+            object.LeftArm.name = "LeftArm11"
+            object.LeftArm.RightHand.name = "RightHand12"
         end
 
         object.nanplayer.Tick = function(self, dt)
