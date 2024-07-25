@@ -40,6 +40,15 @@ Client.OnStart = function()
         gizmo:setObject(selectedObject)
 
         gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize, selectedInterp)
+        if timeline.propertiesButtonSelected == "X" then
+            timeline.propertiesButtonEdit.Text = gizmo:getObject().LocalRotation.X
+        end
+        if timeline.propertiesButtonSelected == "Y" then
+            timeline.propertiesButtonEdit.Text = gizmo:getObject().LocalRotation.Y
+        end
+        if timeline.propertiesButtonSelected == "Z" then
+            timeline.propertiesButtonEdit.Text = gizmo:getObject().LocalRotation.Z
+        end
     end)
     gizmo:setOnMoveEnd(function()
         gizmo:getObject():addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize, selectedInterp)
@@ -122,6 +131,7 @@ Pointer.Down = function( pointerEvent )
     else
         selectedObject = impact.Object
         gizmo:setObject(selectedObject)
+
         timeline.update()
     end
 end
@@ -703,6 +713,89 @@ createUI = function()
     timeline.propertiesButton.Width = 220-3
     --timeline.propertiesButton.pos = Number2(Screen.Width - 230+3, 10 + 250)
     timeline.propertiesButton.pos = Number2(-1000, -1000)
+    timeline.propertiesButton.onRelease = function()
+        if not timeline.propertiesButton.clicked then
+            timeline.propertiesRotationX.pos = Number2(Screen.Width - 230+3+5, 10 + 250+5)
+            timeline.propertiesRotationY.pos = Number2(Screen.Width - 230+3+5+32, 10 + 250+5)
+            timeline.propertiesRotationZ.pos = Number2(Screen.Width - 230+3+5+32*2, 10 + 250+5)
+            timeline.propertiesButton.pos = Number2(Screen.Width - 230+3, 10 + 250+91)
+            timeline.propertiesButtonBG.pos = Number2(Screen.Width - 230+3, 10 + 250)
+            timeline.propertiesButtonEdit.pos = Number2(Screen.Width - 230+3+5+32*3+5, 10 + 250+5)
+            timeline.propertiesButton.clicked = true
+        else
+            timeline.propertiesRotationX.pos = Number2(-1000, -1000)
+            timeline.propertiesRotationY.pos = Number2(-1000, -1000)
+            timeline.propertiesRotationZ.pos = Number2(-1000, -1000)
+            timeline.propertiesButton.pos = Number2(Screen.Width - 230+3, 10 + 250)
+            timeline.propertiesButtonBG.pos = Number2(-1000, -1000)
+            timeline.propertiesButtonEdit.pos = Number2(-1000, -1000)
+            timeline.propertiesButton.clicked = false
+        end
+    end
+
+    timeline.propertiesButtonBG = ui:createFrame(Color(46, 46, 46, 0.5))
+    timeline.propertiesButtonBG.Width = 220-3
+    timeline.propertiesButtonBG.Height = 91
+   --timeline.propertiesButtonBG.pos = Number2(Screen.Width - 230+3, 10 + 250)
+    timeline.propertiesButtonBG.pos = Number2(-1000, -1000)
+
+    timeline.propertiesButtonEdit = ui:createTextInput("0", "Number")
+    timeline.propertiesButtonEdit.Width = 106
+    timeline.propertiesButtonEdit.Height = 38
+    --timeline.propertiesButtonEdit.pos = Number2(Screen.Width - 230+3+5+32*3+5, 10 + 250+5)
+    timeline.propertiesButtonEdit.pos = Number2(-1000, -1000)
+    timeline.propertiesButtonEdit.onSubmit = function(self)
+        self:_unfocus()
+        self:onFocusLost()
+    end
+    timeline.propertiesButtonEdit.onFocusLost = function()
+        if selectedObject ~= nil and tonumber(timeline.propertiesButtonEdit.Text) ~= nil and timeline.propertiesButtonSelected ~= nil then
+            if timeline.propertiesButtonSelected == "X" then
+                selectedObject.LocalRotation.X = tonumber(timeline.propertiesButtonEdit.Text)
+            elseif timeline.propertiesButtonSelected == "Y" then
+                selectedObject.LocalRotation.Y = tonumber(timeline.propertiesButtonEdit.Text)
+            elseif timeline.propertiesButtonSelected == "Z" then
+                selectedObject.LocalRotation.Z = tonumber(timeline.propertiesButtonEdit.Text)
+            end
+            selectedObject:addKeyframe((timeline.selectedTime+timeline.frameOffset)//timeline.stepSize, selectedInterp)
+        end
+    end
+
+    timeline.propertiesRotationX = ui:createButton("X", {borders = false, shadow = false, color = Color(146, 46, 46, 0.6), colorPressed = Color(126, 26, 26, 0.6)})
+    timeline.propertiesRotationX.Height = 38
+    timeline.propertiesRotationX.Width = 32
+    --timeline.propertiesRotationX.pos = Number2(Screen.Width - 230+3+3, 10 + 250+3)
+    timeline.propertiesRotationX.pos = Number2(-1000, -1000)
+    timeline.propertiesRotationX.onRelease = function()
+        if selectedObject.LocalRotation.X ~= nil then
+            timeline.propertiesButtonEdit.Text = selectedObject.LocalRotation.X
+        end
+        timeline.propertiesButtonSelected = "X"
+    end
+
+    timeline.propertiesRotationY = ui:createButton("Y", {borders = false, shadow = false, color = Color(46, 146, 46, 0.6), colorPressed = Color(26, 126, 26, 0.6)})
+    timeline.propertiesRotationY.Height = 38
+    timeline.propertiesRotationY.Width = 32
+    --timeline.propertiesRotationY.pos = Number2(Screen.Width - 230+3+3+32, 10 + 250+3)
+    timeline.propertiesRotationY.pos = Number2(-1000, -1000)
+    timeline.propertiesRotationY.onRelease = function()
+        if selectedObject.LocalRotation.X ~= nil then
+            timeline.propertiesButtonEdit.Text = selectedObject.LocalRotation.Y
+        end
+        timeline.propertiesButtonSelected = "Y"
+    end
+
+    timeline.propertiesRotationZ = ui:createButton("Z", {borders = false, shadow = false, color = Color(46, 46, 146, 0.6), colorPressed = Color(26, 26, 126, 0.6)})
+    timeline.propertiesRotationZ.Height = 38
+    timeline.propertiesRotationZ.Width = 32
+    --timeline.propertiesRotationZ.pos = Number2(Screen.Width - 230+3+3+32*2, 10 + 250+3)
+    timeline.propertiesRotationZ.pos = Number2(-1000, -1000)
+    timeline.propertiesRotationZ.onRelease = function()
+        if selectedObject.LocalRotation.X ~= nil then
+            timeline.propertiesButtonEdit.Text = selectedObject.LocalRotation.Z
+        end
+        timeline.propertiesButtonSelected = "Z"
+    end
 
     timeline.update = function()
         if timeline.frameOffset < 0 then
@@ -739,8 +832,7 @@ createUI = function()
             if timeline.animations[selectedAnimation].loopEnd >= timeline.frameOffset/20 and timeline.animations[selectedAnimation].loopEnd < timeline.frameOffset/20 + 69 then
                 timeline.loopEndLine.size = Number2(3, 210)
                 timeline.loopEndLine.pos = Number2(266+5 + (timeline.animations[selectedAnimation].loopEnd-timeline.frameOffset/20)*timeline.stepSize, 10)
-                timeline.loopEndText.pos = Number2(timeline.loopEndLine.pos.X+9, timeline.loopEndLine.pos.Y + 210+27)
-            else
+                timeline.loopEndText.pos = Number2(timeline.loopEndLine.pos.X+9, timeline.loopEndLine.pos.Y + 210+27)            else
                 timeline.loopEndLine.pos = Number2(-1000, -1000)
                 timeline.loopEndText.pos = Number2(-1000, -1000)
             end
@@ -763,7 +855,7 @@ createUI = function()
                 timeline.buttons[i].line3.size = Number2(5, 17)
                 timeline.buttons[i].line3.pos = Number2(timeline.buttons[i].pos.X - 10, timeline.buttons[i].pos.Y)
             end
-
+            
             for k, val in pairs(timeline.animations[selectedAnimation].shapes[v.name].frames) do
                 if timeline.keyframes[val] == nil then timeline.keyframes[val] = {} end
                 timeline.keyframes[val][k] = ui:createFrame(Color(0, 255, 255))
@@ -806,10 +898,18 @@ createUI = function()
             end
         end
 
-        if gizmo.object ~= nil and timeline.lerpButtons[1].pos == Number3(-1000, -1000, -5.4) then
-            timeline.propertiesButton.pos = Number2(Screen.Width - 230+3, 10 + 250)
-        else
-            timeline.propertiesButton.pos = Number2(-1000, -1000)
+        if not timeline.propertiesButton.clicked then
+            if gizmo.object ~= nil and timeline.lerpButtons[1].pos == Number3(-1000, -1000, -5.4) then
+                timeline.propertiesButton.pos = Number2(Screen.Width - 230+3, 10 + 250)
+            else
+                timeline.propertiesButton.pos = Number2(-1000, -1000)
+                timeline.propertiesRotationX.pos = Number2(-1000, -1000)
+                timeline.propertiesRotationY.pos = Number2(-1000, -1000)
+                timeline.propertiesRotationZ.pos = Number2(-1000, -1000)
+                timeline.propertiesButtonBG.pos = Number2(-1000, -1000)
+                timeline.propertiesButtonEdit.pos = Number2(-1000, -1000)
+                timeline.propertiesButton.clicked = false
+            end
         end
     end
 
@@ -894,6 +994,18 @@ createUI = function()
                     rightpos,
                     lerp[timeline.animations[selectedAnimation].shapes[s.name].frames[tostring(left_keyframe) .. "_"].interpolation](time)
                 )
+            end
+
+            if s == selectedObject then
+                if timeline.propertiesButtonSelected == "X" then
+                    timeline.propertiesButtonEdit.Text = gizmo:getObject().LocalRotation.X
+                end
+                if timeline.propertiesButtonSelected == "Y" then
+                    timeline.propertiesButtonEdit.Text = gizmo:getObject().LocalRotation.Y
+                end
+                if timeline.propertiesButtonSelected == "Z" then
+                    timeline.propertiesButtonEdit.Text = gizmo:getObject().LocalRotation.Z
+                end
             end
         end)
     end
@@ -1200,6 +1312,10 @@ loadModel = function(model, loading)
         timeline.updateTime()
         timeline.updateAnimations()
         timeline.updateObjects()
+    end
+
+    if timeline.shapeType == "player" then
+        model.LocalPosition.Y = 0
     end
 
     hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
