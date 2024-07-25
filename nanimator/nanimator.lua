@@ -55,22 +55,34 @@ nanimator.add = function(object, name)
 
         local currentId = 0
 
-        hierarchyActions:applyToDescendants(object,  { includeRoot = true }, function(s)
-            local name = s.Name
-            if type(s) ~= "Shape" and type(s) ~= "MutableShape" then
-                return
-            end
-            if s.Name == nil and isplayer then
-                return
-            end
-            if name == nil or name == "(null)" then
-                name = "shape_"
-            end
-            currentId = currentId + 1
-            s.name = name .. currentId
+        if not isplayer then
+            hierarchyActions:applyToDescendants(object,  { includeRoot = true }, function(s)
+                local name = s.Name
+                if type(s) ~= "Shape" and type(s) ~= "MutableShape" then
+                    return
+                end
+                if name == nil or name == "(null)" then
+                    name = "shape_"
+                end
+                currentId = currentId + 1
+                s.name = name .. currentId
 
-            s.resetAnimation = true
-        end)
+                s.resetAnimation = true
+            end)
+        else
+            object.name = "Body1"
+            object:GetChild(1).name = "Head2"
+            object:GetChild(2):GetChild(1).name = "EyeLidRight3"
+            object:GetChild(2):GetChild(1).name = "EyeLidRight4"
+            object:GetChild(2).name = "RightLeg5"
+            object:GetChild(2):GetChild(1).name = "RightFoot6"
+            object:GetChild(3).name = "LeftLeg7"
+            object:GetChild(3):GetChild(1).name = "LeftFoot6"
+            object:GetChild(4).name = "RightArm9"
+            object:GetChild(4):GetChild(1).name = "RightHand10"
+            object:GetChild(5).name = "LeftArm11"
+            object:GetChild(5):GetChild(1).name = "RightHand12"
+        end
 
         object.nanplayer.Tick = function(self, dt)
             local parent = self:GetParent()
