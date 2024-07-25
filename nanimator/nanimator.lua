@@ -70,6 +70,8 @@ nanimator.add = function(object, name)
                 s.resetAnimation = true
             end)
         else
+            print(object.Head)
+            --[[
             object.name = "Body1"
             object.Head.name = "Head2"
             object.Head.EyeLidRight.name = "EyeLidRight3"
@@ -82,6 +84,7 @@ nanimator.add = function(object, name)
             object.RightArm.RightHand.name = "RightHand10"
             object.LeftArm.name = "LeftArm11"
             object.LeftArm.RightHand.name = "RightHand12"
+            ]]
         end
 
         object.nanplayer.Tick = function(self, dt)
