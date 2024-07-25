@@ -32,10 +32,14 @@ nanimator.add = function(object, name)
     end
     hierarchyActions = require("hierarchyactions")
 
+    local isplayer = false
     if type(object) == "Player" then
         object = object.Body
 
         print("⚠️ nanimator.add(): can't add animation to a Player object. Animation added to a Player.Body")
+    end
+    if object:GetChild(1) ~= nil and type(object:GetChild(1)) == "MutableShape" then
+        isplayer = true
     end
 
     if object.nanplayer == nil then
@@ -54,6 +58,9 @@ nanimator.add = function(object, name)
         hierarchyActions:applyToDescendants(object,  { includeRoot = true }, function(s)
             local name = s.Name
             if type(s) ~= "Shape" and type(s) ~= "MutableShape" then
+                return
+            end
+            if s.Name == nil and isplayer then
                 return
             end
             if name == nil or name == "(null)" then
