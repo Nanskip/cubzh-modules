@@ -81,7 +81,7 @@ nanimator.add = function(object, name)
             object.RightArm.name = "RightArm9"
             object.RightArm.RightHand.name = "RightHand10"
             object.LeftArm.name = "LeftArm11"
-            object.LeftArm.RightHand.name = "RightHand12"
+            object.LeftArm.LeftHand.name = "LeftHand12"
         end
 
         object.nanplayer.Tick = function(self, dt)
