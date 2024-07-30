@@ -50,6 +50,7 @@ joysticks.create = function(config)
             joystick.stick = ui:createShape(item)
             joystick.stick.shape.Palette[1].Color = joystick.config.borderColor
             joystick.stick.shape.Palette[2].Color = joystick.config.color
+            joystick.stick.fakepos = Number2(0, 0)
 
             joystick.stick.Width = 64*joystick.config.scale
             joystick.stick.Height = 64*joystick.config.scale
