@@ -1314,10 +1314,6 @@ loadModel = function(model, loading)
         timeline.updateObjects()
     end
 
-    if timeline.shapeType == "player" then
-        model.LocalPosition.Y = 0
-    end
-
     hierarchyActions:applyToDescendants(model,  { includeRoot = true }, function(s)
         table.insert(timeline.shapes, s)
         
