@@ -302,6 +302,10 @@ nanimator.add = function(object, name)
             end
 
             if self.nanplayer.playing then
+                hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
+                    s.LocalRotation = s.baseRot
+                    s.LocalPosition = s.basePos
+                end)
                 self.nanplayer.loop = false
                 self.nanplayer.currentFrame = self.nanplayer.animations[self.nanplayer.currentAnimation].animations[self.nanplayer.animationKey].maxTime
             end
