@@ -294,7 +294,7 @@ nanimator.add = function(object, name)
             self:nanPlay(name, anim)
         end
 
-        object.nanStop = function(self)
+        object.nanStop = function(self, goback)
             if self == nil then
                 error([[self:nanStop() must be executed with ":"!]], 3)
 
@@ -302,12 +302,14 @@ nanimator.add = function(object, name)
             end
 
             if self.nanplayer.playing then
-                hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
-                    if s.basePos and s.baseRot then
-                        s.LocalRotation = s.baseRot
-                        s.LocalPosition = s.basePos
-                    end
-                end)
+                if goback then
+                    hierarchyActions:applyToDescendants(self:GetParent(),  { includeRoot = true }, function(s)
+                        if s.basePos and s.baseRot then
+                            s.LocalRotation = s.baseRot
+                            s.LocalPosition = s.basePos
+                        end
+                    end)
+                end
                 self.nanplayer.loop = false
                 self.nanplayer.currentFrame = self.nanplayer.animations[self.nanplayer.currentAnimation].animations[self.nanplayer.animationKey].maxTime
             end
