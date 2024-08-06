@@ -264,6 +264,7 @@ nanimator.add = function(object, name)
             if not self.nanplayer.playing then
                 if name ~= nil then
                     self.nanplayer.animations[name] = nanimator.animations[name]
+                    self.nanplayer.currentAnimation = name
                 end
                 if name == nil then
                     name = self.nanplayer.currentAnimation
