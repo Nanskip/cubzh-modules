@@ -310,6 +310,7 @@ nanimator.add = function(object, name)
                         end
                     end)
                 end
+                self.nanplayer.playing = false
                 self.nanplayer.loop = false
                 self.nanplayer.currentFrame = self.nanplayer.animations[self.nanplayer.currentAnimation].animations[self.nanplayer.animationKey].maxTime
             end
