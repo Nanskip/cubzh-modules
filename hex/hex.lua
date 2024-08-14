@@ -2,6 +2,9 @@ local hex = {}
 
 local function hexToRgb(hex)
     -- Remove the hash if it exists
+    if hex == nil or type(hex) ~= "string" then
+        error("hex() - 1st argument should be a string.")
+    end
     hex = hex:gsub("^#", "")
     
     -- Check if the HEX code is valid
