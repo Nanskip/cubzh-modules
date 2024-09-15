@@ -109,3 +109,5 @@ end
 function perlin.fade(t)
 	return t * t * t * (t * (t * 6 - 15) + 10)
 end
+
+return perlin
