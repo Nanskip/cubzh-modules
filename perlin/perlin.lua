@@ -1,27 +1,44 @@
-
-perlin = {}
+local perlin = {}
 
 -- Initialize permutation table
 perlin.permutation = {}
-for i = 0, 255 do
-    perlin.permutation[i] = i
-end
 
--- Function to shuffle permutation table
-function perlin.shuffle(t)
-    for i = #t, 2, -1 do
-        local j = math.random(i)
-        t[i], t[j] = t[j], t[i]
+-- Simple deterministic random number generator (Linear Congruential Generator)
+function perlin.lcg(seed)
+    local current_seed = seed
+    return function()
+        current_seed = (1103515245 * current_seed + 12345) % 2147483648
+        return current_seed / 2147483648
     end
 end
 
--- Seed the permutation table
- function perlin.seed(seed)
-    math.randomseed(seed)
-    perlin.shuffle(perlin.permutation)
-    -- Duplicate the permutation table to handle index wrapping
+-- Function to shuffle permutation table with deterministic randomness
+function perlin.shuffle(seed)
+    local rand = perlin.lcg(seed)
     for i = 0, 255 do
-        perlin.permutation[256 + i] = perlin.permutation[i]
+      perlin.permutation[i] = i
+    end
+  
+    for i = 1, #perlin.permutation do
+      local j = math.floor(rand() * (#perlin.permutation-1)) + 1
+  
+      local a = perlin.permutation[i]
+      local b = perlin.permutation[j]
+  
+      perlin.permutation[i] = b
+      perlin.permutation[j] = a
+    end
+  end
+
+-- Seed the permutation table
+function perlin.seed(seed)
+    for i = 0, 5 do
+        perlin.shuffle(seed)
+        -- Duplicate the permutation table to handle index wrapping
+    
+        for i = 0, 255 do
+            perlin.permutation[256 + i] = perlin.permutation[i]
+        end
     end
 end
 
@@ -92,5 +109,3 @@ end
 function perlin.fade(t)
 	return t * t * t * (t * (t * 6 - 15) + 10)
 end
-
-return perlin
