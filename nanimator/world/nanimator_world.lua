@@ -1365,6 +1365,7 @@ loadModel = function(model, loading)
         v.name = name .. timeline.currentId
         timeline.buttons[k] = ui:createButton(name .. timeline.currentId .. " [#" .. #timeline.buttons .. "]", {borders = false, color = Color(0.2, 0.2, 0.2, 0.3), colorPressed = Color(0.3, 0.3, 0.3, 0.3), shadow = false})
         timeline.buttons[k].pos = Number2(15, 15 + ((timeline.buttons[k].Height + 5))*(k-1))
+        timeline.buttons[k]:enable()
 
         if v.depth == nil then v.depth = 0 end
         timeline.buttons[k].Width = 250
