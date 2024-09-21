@@ -43,8 +43,6 @@ skybox.load = function(config, func)
 			error("Error: " .. data.StatusCode)
 		end
 
-		print(data.StatusCode)
-
 		local image = data.Body
 		local object = Object()
 
