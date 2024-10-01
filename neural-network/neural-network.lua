@@ -1,10 +1,9 @@
-
 local ACTIVATION_RESPONSE = 1
 
 local NeuralNetwork = {
     transfer = function(x)
         return 1 / (1 + math.exp(-x / ACTIVATION_RESPONSE))
-    end -- Sigmoid transfer function
+    end
 }
 
 function NeuralNetwork.create(_numInputs, _numOutputs, _numHiddenLayers, _neuronsPerLayer, _learningRate)
@@ -14,26 +13,25 @@ function NeuralNetwork.create(_numInputs, _numOutputs, _numHiddenLayers, _neuron
     _neuronsPerLayer = _neuronsPerLayer or math.ceil(_numInputs * 0.66666 + _numOutputs)
     _learningRate = _learningRate or 0.5
 
-    -- Initialize network with learning rate
     local network = setmetatable({ learningRate = _learningRate }, { __index = NeuralNetwork })
+    network.layers = _numHiddenLayers + 2
+    network.nodes = {}
 
-    -- Input Layer
     network[1] = {}
+    network.nodes[1] = _numInputs
     for i = 1, _numInputs do
         network[1][i] = {}
     end
 
-    -- Hidden and Output Layers
-    for i = 2, _numHiddenLayers + 2 do -- +2 for hidden layers and output layer
+    for i = 2, network.layers do
         network[i] = {}
-        local neuronsInLayer = (i == _numHiddenLayers + 2) and _numOutputs or _neuronsPerLayer
-
+        local neuronsInLayer = (i == network.layers) and _numOutputs or _numHiddenLayers
+        network.nodes[i] = neuronsInLayer
         for j = 1, neuronsInLayer do
             network[i][j] = { bias = math.random() * 2 - 1 }
-            local numNeuronInputs = #network[i - 1]
-
+            local numNeuronInputs = network.nodes[i - 1]
             for k = 1, numNeuronInputs do
-                network[i][j][k] = math.random() * 2 - 1 -- Initialize weights between -1 and 1
+                network[i][j][k] = math.random() * 2 - 1
             end
         end
     end
@@ -50,25 +48,19 @@ function NeuralNetwork:forward(inputs)
         error(string.format("Neural Network received %d input(s) (expected %d)", #inputs, #self[1]), 2)
     end
 
-    -- Set input layer results
     for j = 1, #self[1] do
         self[1][j].result = inputs[j]
     end
 
-    -- Forward propagate through hidden and output layers
     for i = 2, #self do
         for j = 1, #self[i] do
             local neuron = self[i][j]
             local sum = neuron.bias
             local prevLayer = self[i - 1]
-
             for k = 1, #prevLayer do
                 sum = sum + (neuron[k] * prevLayer[k].result)
             end
-
             neuron.result = self.transfer(sum)
-
-            -- Collect output layer results
             if i == #self then
                 self.outputs = self.outputs or {}
                 self.outputs[j] = neuron.result
@@ -76,7 +68,6 @@ function NeuralNetwork:forward(inputs)
         end
     end
 
-    -- Return a copy of outputs to prevent external modification
     local outputs = {}
     for i = 1, #self[#self] do
         outputs[i] = self[#self][i].result
@@ -94,17 +85,14 @@ function NeuralNetwork:backward(inputs, desiredOutputs)
         error(string.format("Neural Network received %d desired output(s) (expected %d)", #desiredOutputs, #self[#self]), 2)
     end
 
-    self:forward(inputs) -- Forward pass to compute current outputs
+    self:forward(inputs)
 
-    -- Calculate deltas for output and hidden layers
     for i = #self, 2, -1 do
         for j = 1, #self[i] do
             local neuron = self[i][j]
             if i == #self then
-                -- Output layer delta
                 neuron.delta = (desiredOutputs[j] - neuron.result) * neuron.result * (1 - neuron.result)
             else
-                -- Hidden layer delta
                 local deltaSum = 0
                 local nextLayer = self[i + 1]
                 for k = 1, #nextLayer do
@@ -115,19 +103,32 @@ function NeuralNetwork:backward(inputs, desiredOutputs)
         end
     end
 
-    -- Update weights and biases
     for i = 2, #self do
         for j = 1, #self[i] do
             local neuron = self[i][j]
-            -- Update bias
             neuron.bias = neuron.bias + (neuron.delta * self.learningRate)
-
-            -- Update weights
             for k = 1, #self[i - 1] do
                 neuron[k] = neuron[k] + (neuron.delta * self.learningRate * self[i - 1][k].result)
             end
         end
     end
+end
+
+function NeuralNetwork:clone()
+    local newNetwork = NeuralNetwork.create(1, 1, 1, 1, self.learningRate)
+    newNetwork.layers = self.layers
+    newNetwork.nodes = {}
+    for i = 1, self.layers do
+        newNetwork.nodes[i] = self.nodes[i]
+        newNetwork[i] = {}
+        for j = 1, self.nodes[i] do
+            newNetwork[i][j] = { bias = self[i][j].bias }
+            for k = 1, self.nodes[i - 1] or 0 do
+                newNetwork[i][j][k] = self[i][j][k]
+            end
+        end
+    end
+    return newNetwork
 end
 
 return NeuralNetwork
