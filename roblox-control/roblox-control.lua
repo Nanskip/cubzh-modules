@@ -7,7 +7,7 @@ module.init = function(replace_old)
     
     Player.camera.Tick = function(self, dt)
         if not module.stopped then
-            Camera.Position = Player.Position + Number3(0, 13, 0) - Camera.Forward * 50
+            Camera.Position = Player.Head.Position + Number3(0, 3, 0) - Camera.Forward * 50
             if Player.Motion.X ~= 0 or Player.Motion.Z ~= 0 then
                 Player.Rotation:Slerp(Player.Rotation, Player.forw.Rotation, 20*dt)
             end
