@@ -59,17 +59,35 @@ snow.create = function(config)
                 end
 
                 particle.setPos = function(s)
+                    if not self.stopped then
                     s.Position = self.Position + self.config.height +
                         Number3(0, s.height_randomness*math.random(-10, 10)/10, 0) +
                         Number3(
                             math.random(-self.config.radius*10, self.config.radius*10)/10,
                             0,
                             math.random(-self.config.radius*10, self.config.radius*10)/10)
+                    else
+                        s:SetParent(nil)
+                        self.pool[#self.pool + 1] = s
+                    end
                 end
                 particle:setPos()
 
                 self.spawned = self.spawned + 1
             end
+        end
+    end
+
+    spawner.stop = function(self)
+        self.stopped = true
+    end
+
+    spawner.start = function(self)
+        self.stopped = false
+
+        for i = 1, #self.pool do
+            self.pool[i]:setPos()
+            self.pool[i]:SetParent(World)
         end
     end
 
