@@ -7,7 +7,7 @@ local ROOM_MIN = 4
 local ROOM_MAX = 8
 
 -- Initialize map
-local function mod.createMap(w, h)
+function mod.createMap(w, h)
     local map = {}
     for y = 1, h do
         map[y] = {}
@@ -19,7 +19,7 @@ local function mod.createMap(w, h)
 end
 
 -- Carve a room in the map
-local function mod.carveRoom(map, x, y, w, h)
+function mod.carveRoom(map, x, y, w, h)
     for j = y, y + h - 1 do
         for i = x, x + w - 1 do
             if j > 0 and j <= MAP_HEIGHT and i > 0 and i <= MAP_WIDTH then
@@ -30,7 +30,7 @@ local function mod.carveRoom(map, x, y, w, h)
 end
 
 -- Maze-like dense grid
-local function mod.generateSeamlessRooms()
+function mod.generateSeamlessRooms()
     local map = createMap(MAP_WIDTH, MAP_HEIGHT)
 
     local gridRows = math.floor(MAP_HEIGHT / ROOM_MAX)
@@ -63,7 +63,7 @@ local function mod.generateSeamlessRooms()
 end
 
 -- Render to terminal
-local function mod.printMap(map)
+function mod.printMap(map)
     for y = 1, #map do
         local row = ""
         for x = 1, #map[y] do
@@ -73,7 +73,7 @@ local function mod.printMap(map)
     end
 end
 
-local function mod.get_map(self)
+function mod.get_map(self)
     return self.generateSeamlessRooms()
 end
 
