@@ -30,8 +30,8 @@ function mod.carveRoom(map, x, y, w, h)
 end
 
 -- Maze-like dense grid
-function mod.generateSeamlessRooms()
-    local map = createMap(MAP_WIDTH, MAP_HEIGHT)
+function mod.generateSeamlessRooms(self)
+    local map = self.createMap(MAP_WIDTH, MAP_HEIGHT)
 
     local gridRows = math.floor(MAP_HEIGHT / ROOM_MAX)
     local gridCols = math.floor(MAP_WIDTH / ROOM_MAX)
@@ -43,7 +43,7 @@ function mod.generateSeamlessRooms()
             local rx = gx * ROOM_MAX + 1 + math.random(0, ROOM_MAX - rw)
             local ry = gy * ROOM_MAX + 1 + math.random(0, ROOM_MAX - rh)
 
-            carveRoom(map, rx, ry, rw, rh)
+            self.carveRoom(map, rx, ry, rw, rh)
 
             -- Optionally connect to neighbor
             if gx > 0 and math.random() < 0.8 then
@@ -74,7 +74,7 @@ function mod.printMap(map)
 end
 
 function mod.get_map(self)
-    return mod.generateSeamlessRooms()
+    return self.generateSeamlessRooms()
 end
 
 return mod
