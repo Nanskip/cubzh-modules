@@ -74,7 +74,7 @@ function mod.printMap(map)
 end
 
 function mod.get_map(self)
-    return self.generateSeamlessRooms()
+    return mod.generateSeamlessRooms()
 end
 
 return mod
